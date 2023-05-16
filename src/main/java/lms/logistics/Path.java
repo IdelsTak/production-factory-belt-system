@@ -14,8 +14,17 @@ import java.util.function.Consumer;
  */
 public class Path {
 
+    /**
+     * The Transport node of the Path.
+     */
     private Transport node;
+    /**
+     * The previous Path object.
+     */
     private Path previous;
+    /**
+     * The next Path object.
+     */
     private Path next;
 
     /**
