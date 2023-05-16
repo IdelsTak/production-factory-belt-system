@@ -6,9 +6,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lms.exceptions.FileFormatException;
 import lms.grid.*;
-import lms.logistics.*;
+import lms.logistics.Item;
+import lms.logistics.Transport;
 import lms.logistics.belts.Belt;
-import lms.logistics.container.*;
+import lms.logistics.container.Producer;
+import lms.logistics.container.Receiver;
 
 /**
  * This class is responsible for loading (reading and parsing) a text file
@@ -359,61 +361,121 @@ public class GameLoader {
                     System.out.println("linking data: " + linkingData);
                     System.out.println("connectedTransports: " + connectedTransports);
 
-                    if (connectedTransports.get(0) instanceof Belt) {
-                        transports.stream().filter(t -> t.getId() == connectedTransports.get(0).getId())
-                                .findFirst()
-                                .ifPresent(t -> {
-                                    t.getPath().setNext(connectedTransports.get(1).getPath());
-                                });
-                    }
-                    if (connectedTransports.get(1) instanceof Belt) {
-                        transports.stream().filter(t -> t.getId() == connectedTransports.get(0).getId())
-                                .findFirst()
-                                .ifPresent(t -> {
-                                    t.getPath().setPrevious(connectedTransports.get(0).getPath());
-                                });
-                    }
-                    if (connectedTransports.get(0) instanceof Receiver receiver) {
-                        transports.stream().filter(t -> t.getId() == connectedTransports.get(0).getId())
-                                .findFirst()
-                                .ifPresent(t -> {
-                                    t.getPath().setPrevious(connectedTransports.get(1).getPath());
-                                });
-                    }
-                    if (connectedTransports.get(0) instanceof Producer producer) {
-                        transports.stream().filter(t -> t.getId() == connectedTransports.get(0).getId())
-                                .findFirst()
-                                .ifPresent(t -> {
-                                    t.getPath().setNext(connectedTransports.get(1).getPath());
-                                });
+                    if (connectedTransports.size() == 3) {
+                        if (connectedTransports.get(0) instanceof Producer producer) {
+                            producer.getPath().setNext(connectedTransports.get(1).getPath());
+                            connectedTransports.get(1).getPath().setPrevious(producer.getPath());
+                        } else if (connectedTransports.get(0) instanceof Belt belt) {
+                            belt.getPath().setNext(connectedTransports.get(1).getPath());
+                            connectedTransports.get(1).getPath().setPrevious(belt.getPath());
+                        }
+                        if (connectedTransports.get(1) instanceof Belt belt) {
+                            belt.getPath().setNext(connectedTransports.get(2).getPath());
+                            connectedTransports.get(2).getPath().setPrevious(belt.getPath());
+                        }
+                    } else if (connectedTransports.size() == 2) {
+                        if (connectedTransports.get(0) instanceof Producer producer) {
+                            producer.getPath().setNext(connectedTransports.get(1).getPath());
+                            connectedTransports.get(1).getPath().setPrevious(producer.getPath());
+                        }
+                        if (connectedTransports.get(0) instanceof Belt belt) {
+                            belt.getPath().setNext(connectedTransports.get(1).getPath());
+                            connectedTransports.get(1).getPath().setPrevious(belt.getPath());
+                        }
+                        if (connectedTransports.get(0) instanceof Receiver receiver) {
+                            receiver.getPath().setPrevious(connectedTransports.get(1).getPath());
+                            connectedTransports.get(1).getPath().setNext(receiver.getPath());
+                        }
                     }
 
                 }
-                
-                System.out.println(transports);
 
             }
 
             System.out.println("Finished parsing sections");
 
+            System.out.println("all paths " + transports.stream().map(t -> t.getPath()).toList());
+
             if (grid != null && gameGrid != null) {
                 Map<Coordinate, GridComponent> map = gameGrid.getGrid();
-
                 LinkedList<Coordinate> coordinates = new LinkedList<>(map.keySet());
 
-                for (int i = 0; i < grid.length; i++) {
+                Coordinate origin = new Coordinate();
 
-                    for (int j = 0; j < grid[i].length; j++) {
-                        char nodeType = grid[i][j];
+                for (int row = 0; row < grid.length; row++) {
+                    for (int column = 0; column < grid[row].length; column++) {
+                        char nodeType = grid[row][column];
 
-                        switch (nodeType) {
-                            case 'p', 'r', 'b' ->
-                                gameGrid.setCoordinate(coordinates.pop(), transports.pop());
-                            case 's', 'o', 'w' -> {
-                                gameGrid.setCoordinate(coordinates.pop(), () -> String.valueOf(nodeType));
+                        if (row == 0 && column == 0) {
+                            switch (nodeType) {
+                                case 'p', 'r', 'b' ->
+                                    gameGrid.setCoordinate(origin.getTopLeft(), transports.pop());
+                                case 's', 'o', 'w' -> {
+                                    gameGrid.setCoordinate(origin.getTopLeft(), () -> String.valueOf(nodeType));
+                                }
+                                default ->
+                                    throw new FileFormatException("Invalid node type: " + nodeType);
                             }
-                            default ->
-                                throw new FileFormatException("Invalid node type: " + nodeType);
+                        } else if (row == 0 && column == 1) {
+                            switch (nodeType) {
+                                case 'p', 'r', 'b' ->
+                                    gameGrid.setCoordinate(origin.getTopRight(), transports.pop());
+                                case 's', 'o', 'w' -> {
+                                    gameGrid.setCoordinate(origin.getTopRight(), () -> String.valueOf(nodeType));
+                                }
+                                default ->
+                                    throw new FileFormatException("Invalid node type: " + nodeType);
+                            }
+                        } else if (row == 1 && column == 0) {
+                            switch (nodeType) {
+                                case 'p', 'r', 'b' ->
+                                    gameGrid.setCoordinate(origin.getLeft(), transports.pop());
+                                case 's', 'o', 'w' -> {
+                                    gameGrid.setCoordinate(origin.getLeft(), () -> String.valueOf(nodeType));
+                                }
+                                default ->
+                                    throw new FileFormatException("Invalid node type: " + nodeType);
+                            }
+                        } else if (row == 1 && column == 1) {
+                            switch (nodeType) {
+                                case 'p', 'r', 'b' ->
+                                    gameGrid.setCoordinate(origin, transports.pop());
+                                case 's', 'o', 'w' -> {
+                                    gameGrid.setCoordinate(origin, () -> String.valueOf(nodeType));
+                                }
+                                default ->
+                                    throw new FileFormatException("Invalid node type: " + nodeType);
+                            }
+                        } else if (row == 1 && column > 1) {
+                            switch (nodeType) {
+                                case 'p', 'r', 'b' ->
+                                    gameGrid.setCoordinate(origin.getRight(), transports.pop());
+                                case 's', 'o', 'w' -> {
+                                    gameGrid.setCoordinate(origin.getRight(), () -> String.valueOf(nodeType));
+                                }
+                                default ->
+                                    throw new FileFormatException("Invalid node type: " + nodeType);
+                            }
+                        } else if (row > 1 && column == 0) {
+                            switch (nodeType) {
+                                case 'p', 'r', 'b' ->
+                                    gameGrid.setCoordinate(origin.getBottomLeft(), transports.pop());
+                                case 's', 'o', 'w' -> {
+                                    gameGrid.setCoordinate(origin.getBottomLeft(), () -> String.valueOf(nodeType));
+                                }
+                                default ->
+                                    throw new FileFormatException("Invalid node type: " + nodeType);
+                            }
+                        } else if (row > 1 && column > 0) {
+                            switch (nodeType) {
+                                case 'p', 'r', 'b' ->
+                                    gameGrid.setCoordinate(origin.getBottomRight(), transports.pop());
+                                case 's', 'o', 'w' -> {
+                                    gameGrid.setCoordinate(origin.getBottomRight(), () -> String.valueOf(nodeType));
+                                }
+                                default ->
+                                    throw new FileFormatException("Invalid node type: " + nodeType);
+                            }
                         }
                     }
 
