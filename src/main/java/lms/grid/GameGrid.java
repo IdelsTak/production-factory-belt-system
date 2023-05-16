@@ -1,7 +1,6 @@
 package lms.grid;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * The GameGrid is responsible for managing the state and initialisation of the
@@ -38,6 +37,7 @@ public class GameGrid {
         this.range = range;
 
         coordinateMap = generate(this.range);
+        //coordinateMap = new HashMap<>();
     }
 
     /**
@@ -46,7 +46,7 @@ public class GameGrid {
      * @return A copy of the grid of the game.
      */
     public Map<Coordinate, GridComponent> getGrid() {
-        return new HashMap<>(coordinateMap);
+        return new LinkedHashMap<>(coordinateMap);
     }
 
     /**
