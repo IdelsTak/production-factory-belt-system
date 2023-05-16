@@ -159,6 +159,30 @@ public class Path {
     }
 
     /**
+     * Compares this Path object to the specified object for equality. Returns
+     * true if and only if the specified object is also a Path object and has
+     * the same Transport node as this Path object.
+     *
+     * @param o the object to compare this Path against
+     * @return true if the specified object is equal to this Path object, false
+     * otherwise
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null) {
+            return false;
+        }
+        if (getClass() != o.getClass()) {
+            return false;
+        }
+        final Path other = (Path) o;
+        return Objects.equals(this.node.getId(), other.node.getId());
+    }
+
+    /**
      * toString that provides a list of Path nodes from a Producer, along the
      * belt to a Receiver. Hint: This is best done using recursive helper
      * function/s.
@@ -180,7 +204,18 @@ public class Path {
      */
     @Override
     public String toString() {
-        throw new UnsupportedOperationException();
+        StringJoiner joiner = new StringJoiner("", "START -> ", " -> END");
+        joiner.merge(pathToStringHelper(head()));
+        return joiner.toString();
+    }
+
+    private StringJoiner pathToStringHelper(Path path) {
+        StringJoiner joiner = new StringJoiner(" -> ");
+        if (path != null) {
+            joiner.add(path.node.toString());
+            joiner.merge(pathToStringHelper(path.next));
+        }
+        return joiner;
     }
 
 }
