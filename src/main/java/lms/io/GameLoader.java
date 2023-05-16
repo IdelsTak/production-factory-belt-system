@@ -1,9 +1,14 @@
 package lms.io;
 
-import java.io.IOException;
-import java.io.Reader;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 import lms.exceptions.FileFormatException;
 import lms.grid.GameGrid;
+import lms.logistics.Item;
+import lms.logistics.container.Producer;
+import lms.logistics.container.Receiver;
 
 /**
  * This class is responsible for loading (reading and parsing) a text file
@@ -229,6 +234,65 @@ public class GameLoader {
      */
     public static GameGrid load(Reader reader) throws IOException,
             FileFormatException {
+        try (BufferedReader in = new BufferedReader(reader)) {
+            int range = -1;
+
+            String line;
+            int lineCount = 0;
+            int sectionCount = 0;
+            int numOfProducers = -1;
+            int createdProducersCount = 0;
+            int numOfReceivers = -1;
+            int createdReceiversCount = 0;
+            List<Producer> producers = new ArrayList<>();
+            List<Receiver> receivers = new ArrayList<>();
+            
+            while ((line = in.readLine()) != null) {
+                lineCount++;
+                System.out.printf("line: %s; #: %d%n", line, lineCount);
+
+                if (lineCount == 1) {
+                    range = Integer.parseInt(line);
+                    System.out.printf("range: %d%n", range);
+                    continue;
+                }
+
+                if (line.contains("_____")) {
+                    sectionCount++;
+                    System.out.printf("end of section: %d%n", sectionCount);
+                    continue;
+                }
+
+                // End of section 1 - now reading section 2
+                if (sectionCount == 1) {
+                    if (numOfProducers == -1 && numOfReceivers == -1) {
+                        numOfProducers = Integer.parseInt(line);
+                    } else if (numOfProducers != -1 && numOfReceivers == -1) {
+                        numOfReceivers = Integer.parseInt(line);
+                    }
+                }
+
+                if (sectionCount == 2) {
+                    //System.out.printf("numOfProducers: %d; numOfReceivers: %d%n", numOfProducers, numOfReceivers);
+                    if (createdProducersCount < numOfProducers) {
+                        createdProducersCount++;
+                        producers.add(new Producer(createdProducersCount, new Item(line)));
+                    }
+                }
+
+                if (sectionCount == 3) {
+                    //System.out.printf("created producers: %s%n", producers.stream().map(p -> String.format("{%s | %s}", p.toString(), p.getInventory())).collect(Collectors.joining("; ")));
+                    if (createdReceiversCount < numOfReceivers) {
+                        createdReceiversCount++;
+                        receivers.add(new Receiver(createdReceiversCount, new Item(line)));
+                    }
+                }
+
+                if (sectionCount == 4) {
+                    //System.out.printf("created receivers: %s%n", receivers.stream().map(r -> String.format("{%s | %s}", r.toString(), r.getInventory())).collect(Collectors.joining("; ")));
+                }
+            }
+        }
         throw new UnsupportedOperationException();
     }
 
