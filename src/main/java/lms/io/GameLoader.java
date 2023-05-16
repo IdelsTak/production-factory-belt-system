@@ -2,11 +2,9 @@ package lms.io;
 
 import java.io.*;
 import java.util.*;
-import java.util.stream.Collectors;
 import lms.exceptions.FileFormatException;
 import lms.grid.*;
 import lms.logistics.Item;
-import lms.logistics.Path;
 import lms.logistics.belts.Belt;
 import lms.logistics.container.Producer;
 import lms.logistics.container.Receiver;
@@ -247,6 +245,7 @@ public class GameLoader {
             int createdReceiversCount = 0;
             LinkedList<Producer> producers = new LinkedList<>();
             LinkedList<Receiver> receivers = new LinkedList<>();
+            LinkedList<Belt> belts = new LinkedList<>();
             char[][] grid = null;
             int gridLineCount = 0;
             GameGrid gameGrid = null;
@@ -305,6 +304,19 @@ public class GameLoader {
 
                     if (gameGrid == null) {
                         gameGrid = new GameGrid(range);
+
+                        int beltsCount = 1;
+
+                        for (int i = 0; i < grid.length; i++) {
+                            for (int j = 0; j < grid[i].length; j++) {
+                                char element = grid[i][j];
+                                if (element == 'b') {
+                                    belts.add(new Belt(beltsCount));
+                                    beltsCount++;
+                                }
+                            }
+                            System.out.println();
+                        }
                     }
                 }
 
@@ -317,20 +329,18 @@ public class GameLoader {
 
                 LinkedList<Coordinate> coordinates = new LinkedList<>(map.keySet());
 
-                for (int x = 0; x < grid.length; x++) {
-                    for (int y = 0; y < grid[x].length; y++) {
-                        char nodeType = grid[x][y];
+                for (int i = 0; i < grid.length; i++) {
+
+                    for (int j = 0; j < grid[i].length; j++) {
+                        char nodeType = grid[i][j];
 
                         switch (nodeType) {
                             case 'p' ->
-                                //gameGrid.setCoordinate(new Coordinate(x, y), producers.pop());
                                 gameGrid.setCoordinate(coordinates.pop(), producers.pop());
                             case 'r' ->
-                                //gameGrid.setCoordinate(new Coordinate(x, y), receivers.pop());
                                 gameGrid.setCoordinate(coordinates.pop(), receivers.pop());
                             case 'b' ->
-                                //gameGrid.setCoordinate(new Coordinate(x, y), new Belt(y));
-                                gameGrid.setCoordinate(coordinates.pop(), new Belt(y));
+                                gameGrid.setCoordinate(coordinates.pop(), belts.pop());
                             case 's', 'o', 'w' -> {
                                 // Ignore splitter, empty or wall nodes
                                 gameGrid.setCoordinate(coordinates.pop(), () -> String.valueOf(nodeType));
@@ -339,6 +349,7 @@ public class GameLoader {
                                 throw new FileFormatException("Invalid node type: " + nodeType);
                         }
                     }
+
                 }
             }
             return gameGrid;
