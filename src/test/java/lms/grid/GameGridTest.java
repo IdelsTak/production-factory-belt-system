@@ -1,5 +1,6 @@
 package lms.grid;
 
+import java.util.Map;
 import lms.logistics.belts.Belt;
 import static org.junit.Assert.assertEquals;
 import org.junit.Before;
@@ -16,14 +17,32 @@ public class GameGridTest {
 
     @Test
     public void testGetGrid() {
+        int index = 1;
+        for (Map.Entry<Coordinate, GridComponent> entry : gameGrid.getGrid().entrySet()) {
+            //System.out.println(entry.getKey() + ": " + entry.getValue().getEncoding());
+            print(entry.getKey(), index++);
+        }
+
         assertEquals(7L, gameGrid.getGrid().entrySet().size());
+    }
+
+    private void print(Coordinate coord, int index) {
+        System.out.println(index);
+        System.out.println("coord: " + coord);
+        System.out.println("top left: " + coord.getTopLeft());
+        System.out.println("top right: " + coord.getTopRight());
+        System.out.println("right: " + coord.getRight());
+        System.out.println("bottom right: " + coord.getBottomRight());
+        System.out.println("bottom left: " + coord.getBottomLeft());
+        System.out.println("left: " + coord.getLeft());
+        System.out.println("");
     }
 
     @Test
     public void testGetRange() {
         assertEquals(1L, gameGrid.getRange());
     }
-    
+
     @Test
     public void testSetCoordinate() {
         gameGrid.setCoordinate(new Coordinate(2, 3), new Belt(1));
