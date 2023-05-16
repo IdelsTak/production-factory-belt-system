@@ -1,12 +1,13 @@
 package lms.io;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import lms.exceptions.FileFormatException;
-import lms.grid.GameGrid;
+import lms.grid.*;
 import lms.logistics.Item;
+import lms.logistics.Path;
+import lms.logistics.belts.Belt;
 import lms.logistics.container.Producer;
 import lms.logistics.container.Receiver;
 
@@ -244,9 +245,12 @@ public class GameLoader {
             int createdProducersCount = 0;
             int numOfReceivers = -1;
             int createdReceiversCount = 0;
-            List<Producer> producers = new ArrayList<>();
-            List<Receiver> receivers = new ArrayList<>();
-            
+            LinkedList<Producer> producers = new LinkedList<>();
+            LinkedList<Receiver> receivers = new LinkedList<>();
+            char[][] grid = null;
+            int gridLineCount = 0;
+            GameGrid gameGrid = null;
+
             while ((line = in.readLine()) != null) {
                 lineCount++;
                 System.out.printf("line: %s; #: %d%n", line, lineCount);
@@ -273,7 +277,6 @@ public class GameLoader {
                 }
 
                 if (sectionCount == 2) {
-                    //System.out.printf("numOfProducers: %d; numOfReceivers: %d%n", numOfProducers, numOfReceivers);
                     if (createdProducersCount < numOfProducers) {
                         createdProducersCount++;
                         producers.add(new Producer(createdProducersCount, new Item(line)));
@@ -281,7 +284,6 @@ public class GameLoader {
                 }
 
                 if (sectionCount == 3) {
-                    //System.out.printf("created producers: %s%n", producers.stream().map(p -> String.format("{%s | %s}", p.toString(), p.getInventory())).collect(Collectors.joining("; ")));
                     if (createdReceiversCount < numOfReceivers) {
                         createdReceiversCount++;
                         receivers.add(new Receiver(createdReceiversCount, new Item(line)));
@@ -289,11 +291,58 @@ public class GameLoader {
                 }
 
                 if (sectionCount == 4) {
-                    //System.out.printf("created receivers: %s%n", receivers.stream().map(r -> String.format("{%s | %s}", r.toString(), r.getInventory())).collect(Collectors.joining("; ")));
+                    if (grid == null) {
+                        grid = new char[range * 2 + 1][];
+                    }
+
+                    String gridLine = line.trim().replaceAll("\\s", "");
+                    grid[gridLineCount] = gridLine.toCharArray();
+                    gridLineCount++;
+                }
+
+                if (sectionCount == 5) {
+                    System.out.println(Arrays.deepToString(grid));
+
+                    if (gameGrid == null) {
+                        gameGrid = new GameGrid(range);
+                    }
+                }
+
+            }
+
+            System.out.println("Finished parsing sections");
+
+            if (grid != null && gameGrid != null) {
+                Map<Coordinate, GridComponent> map = gameGrid.getGrid();
+
+                LinkedList<Coordinate> coordinates = new LinkedList<>(map.keySet());
+
+                for (int x = 0; x < grid.length; x++) {
+                    for (int y = 0; y < grid[x].length; y++) {
+                        char nodeType = grid[x][y];
+
+                        switch (nodeType) {
+                            case 'p' ->
+                                //gameGrid.setCoordinate(new Coordinate(x, y), producers.pop());
+                                gameGrid.setCoordinate(coordinates.pop(), producers.pop());
+                            case 'r' ->
+                                //gameGrid.setCoordinate(new Coordinate(x, y), receivers.pop());
+                                gameGrid.setCoordinate(coordinates.pop(), receivers.pop());
+                            case 'b' ->
+                                //gameGrid.setCoordinate(new Coordinate(x, y), new Belt(y));
+                                gameGrid.setCoordinate(coordinates.pop(), new Belt(y));
+                            case 's', 'o', 'w' -> {
+                                // Ignore splitter, empty or wall nodes
+                                gameGrid.setCoordinate(coordinates.pop(), () -> String.valueOf(nodeType));
+                            }
+                            default ->
+                                throw new FileFormatException("Invalid node type: " + nodeType);
+                        }
+                    }
                 }
             }
+            return gameGrid;
         }
-        throw new UnsupportedOperationException();
     }
 
 }
