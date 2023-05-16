@@ -2,12 +2,13 @@ package lms.io;
 
 import java.io.*;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import lms.exceptions.FileFormatException;
 import lms.grid.*;
-import lms.logistics.Item;
+import lms.logistics.*;
 import lms.logistics.belts.Belt;
-import lms.logistics.container.Producer;
-import lms.logistics.container.Receiver;
+import lms.logistics.container.*;
 
 /**
  * This class is responsible for loading (reading and parsing) a text file
@@ -243,9 +244,9 @@ public class GameLoader {
             int createdProducersCount = 0;
             int numOfReceivers = -1;
             int createdReceiversCount = 0;
-            LinkedList<Producer> producers = new LinkedList<>();
-            LinkedList<Receiver> receivers = new LinkedList<>();
-            LinkedList<Belt> belts = new LinkedList<>();
+            LinkedList<Item> producerItems = new LinkedList<>();
+            LinkedList<Item> receiverItems = new LinkedList<>();
+            LinkedList<Transport> transports = new LinkedList<>();
             char[][] grid = null;
             int gridLineCount = 0;
             GameGrid gameGrid = null;
@@ -278,14 +279,14 @@ public class GameLoader {
                 if (sectionCount == 2) {
                     if (createdProducersCount < numOfProducers) {
                         createdProducersCount++;
-                        producers.add(new Producer(createdProducersCount, new Item(line)));
+                        producerItems.add(new Item(line));
                     }
                 }
 
                 if (sectionCount == 3) {
                     if (createdReceiversCount < numOfReceivers) {
                         createdReceiversCount++;
-                        receivers.add(new Receiver(createdReceiversCount, new Item(line)));
+                        receiverItems.add(new Item(line));
                     }
                 }
 
@@ -304,21 +305,92 @@ public class GameLoader {
 
                     if (gameGrid == null) {
                         gameGrid = new GameGrid(range);
-
-                        int beltsCount = 1;
+                        int componentsCount = 1;
 
                         for (int i = 0; i < grid.length; i++) {
                             for (int j = 0; j < grid[i].length; j++) {
                                 char element = grid[i][j];
-                                if (element == 'b') {
-                                    belts.add(new Belt(beltsCount));
-                                    beltsCount++;
+                                switch (element) {
+                                    case 'b' -> {
+                                        Belt belt = new Belt(componentsCount);
+                                        transports.add(belt);
+                                        componentsCount++;
+                                    }
+
+                                    case 'p' -> {
+                                        Item item = producerItems.pop();
+                                        Producer producer = new Producer(componentsCount, item);
+                                        transports.add(producer);
+                                        componentsCount++;
+                                    }
+
+                                    case 'r' -> {
+                                        Item item = receiverItems.pop();
+                                        Receiver receiver = new Receiver(componentsCount, item);
+                                        transports.add(receiver);
+                                        componentsCount++;
+                                    }
+
+                                    default -> {
+                                    }
                                 }
                             }
-                            System.out.println();
                         }
                     }
+
+                    List<Integer> linkingData = new ArrayList<>();
+                    String pattern = "\\d+";
+                    Pattern regex = Pattern.compile(pattern);
+                    Matcher matcher = regex.matcher(line);
+
+                    while (matcher.find()) {
+                        String numStr = matcher.group();
+                        int num = Integer.parseInt(numStr);
+                        linkingData.add(num);
+                    }
+
+                    List<Transport> connectedTransports = transports
+                            .stream()
+                            .filter(t -> {
+                                return linkingData.contains(t.getId());
+                            })
+                            .toList();
+
+                    System.out.println("linking data: " + linkingData);
+                    System.out.println("connectedTransports: " + connectedTransports);
+
+                    if (connectedTransports.get(0) instanceof Belt) {
+                        transports.stream().filter(t -> t.getId() == connectedTransports.get(0).getId())
+                                .findFirst()
+                                .ifPresent(t -> {
+                                    t.getPath().setNext(connectedTransports.get(1).getPath());
+                                });
+                    }
+                    if (connectedTransports.get(1) instanceof Belt) {
+                        transports.stream().filter(t -> t.getId() == connectedTransports.get(0).getId())
+                                .findFirst()
+                                .ifPresent(t -> {
+                                    t.getPath().setPrevious(connectedTransports.get(0).getPath());
+                                });
+                    }
+                    if (connectedTransports.get(0) instanceof Receiver receiver) {
+                        transports.stream().filter(t -> t.getId() == connectedTransports.get(0).getId())
+                                .findFirst()
+                                .ifPresent(t -> {
+                                    t.getPath().setPrevious(connectedTransports.get(1).getPath());
+                                });
+                    }
+                    if (connectedTransports.get(0) instanceof Producer producer) {
+                        transports.stream().filter(t -> t.getId() == connectedTransports.get(0).getId())
+                                .findFirst()
+                                .ifPresent(t -> {
+                                    t.getPath().setNext(connectedTransports.get(1).getPath());
+                                });
+                    }
+
                 }
+                
+                System.out.println(transports);
 
             }
 
@@ -335,14 +407,9 @@ public class GameLoader {
                         char nodeType = grid[i][j];
 
                         switch (nodeType) {
-                            case 'p' ->
-                                gameGrid.setCoordinate(coordinates.pop(), producers.pop());
-                            case 'r' ->
-                                gameGrid.setCoordinate(coordinates.pop(), receivers.pop());
-                            case 'b' ->
-                                gameGrid.setCoordinate(coordinates.pop(), belts.pop());
+                            case 'p', 'r', 'b' ->
+                                gameGrid.setCoordinate(coordinates.pop(), transports.pop());
                             case 's', 'o', 'w' -> {
-                                // Ignore splitter, empty or wall nodes
                                 gameGrid.setCoordinate(coordinates.pop(), () -> String.valueOf(nodeType));
                             }
                             default ->
