@@ -18,7 +18,14 @@ import java.util.Map;
  */
 public class GameGrid {
 
+    /**
+     * The range of the grid.
+     */
     private final int range;
+    /**
+     * The grid of the game.
+     */
+    private final Map<Coordinate, GridComponent> coordinateMap;
 
     /**
      * Create a new GameGrid with the given range, stored in a Map. A private
@@ -29,6 +36,8 @@ public class GameGrid {
      */
     public GameGrid(int range) {
         this.range = range;
+
+        coordinateMap = generate(this.range);
     }
 
     /**
@@ -37,7 +46,7 @@ public class GameGrid {
      * @return A copy of the grid of the game.
      */
     public Map<Coordinate, GridComponent> getGrid() {
-        throw new UnsupportedOperationException();
+        return new HashMap<>(coordinateMap);
     }
 
     /**
@@ -57,7 +66,7 @@ public class GameGrid {
      * @param component The GridComponent to be set.
      */
     public void setCoordinate(Coordinate coordinate, GridComponent component) {
-        throw new UnsupportedOperationException();
+        coordinateMap.put(coordinate, component);
     }
 
     /**
