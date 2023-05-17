@@ -358,18 +358,17 @@ public class GameLoader {
                             })
                             .toList();
 
-                    System.out.println("linking data: " + linkingData);
-                    System.out.println("connectedTransports: " + connectedTransports);
-
-                    Transport transport = connectedTransports.get(0);
-                    Transport nextTransport = connectedTransports.get(1);
+                    Transport transport = connectedTransports.stream().filter(t -> t.getId() == linkingData.get(0)).findFirst().orElseThrow();
+                    Transport nextTransport = connectedTransports.stream().filter(t -> t.getId() == linkingData.get(1)).findFirst().orElseThrow();
                     Path nextPath = nextTransport.getPath();
 
+                    System.out.println("linking data: " + linkingData);
                     System.out.println("nextTransport: " + nextTransport);
 
                     if (connectedTransports.size() == 3) {
-                        Transport thirdTransport = connectedTransports.get(2);
-                        
+                        Transport thirdTransport = connectedTransports.stream().filter(t -> t.getId() == linkingData.get(2)).findFirst().orElseThrow();
+                        System.out.println("connectedTransports: " + List.of(transport, nextTransport, thirdTransport));
+
                         if (transport instanceof Producer producer) {
                             producer.setOutput(nextPath);
                             nextTransport.setInput(producer.getPath());
@@ -385,7 +384,6 @@ public class GameLoader {
                             receiver.setInput(nextPath);
                             nextTransport.setOutput(receiver.getPath());
                         }
-
 
                         if (nextTransport instanceof Producer producer) {
                             producer.setOutput(thirdTransport.getPath());
@@ -403,17 +401,14 @@ public class GameLoader {
                             thirdTransport.setOutput(receiver.getPath());
                         }
                     } else if (connectedTransports.size() == 2) {
+                        System.out.println("connectedTransports: " + List.of(transport, nextTransport));
+
                         if (transport instanceof Producer producer) {
                             producer.setOutput(nextPath);
                             nextTransport.setInput(producer.getPath());
                         } else if (transport instanceof Belt belt) {
-                            if (nextTransport instanceof Producer producer) {
-                                belt.setInput(producer.getPath());
-                                producer.setOutput(belt.getPath());
-                            } else {
-                                belt.setOutput(nextTransport.getPath());
-                                nextTransport.setInput(belt.getPath());
-                            }
+                            belt.setOutput(nextTransport.getPath());
+                            nextTransport.setInput(belt.getPath());
                         } else if (transport instanceof Receiver receiver) {
                             receiver.setInput(nextPath);
                             nextTransport.setOutput(receiver.getPath());
