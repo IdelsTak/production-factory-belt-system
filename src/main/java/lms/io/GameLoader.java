@@ -4,10 +4,10 @@ import java.io.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import lms.exceptions.FileFormatException;
 import lms.grid.*;
-import lms.logistics.Item;
-import lms.logistics.Transport;
+import lms.logistics.*;
 import lms.logistics.belts.Belt;
 import lms.logistics.container.Producer;
 import lms.logistics.container.Receiver;
@@ -361,30 +361,62 @@ public class GameLoader {
                     System.out.println("linking data: " + linkingData);
                     System.out.println("connectedTransports: " + connectedTransports);
 
+                    Transport transport = connectedTransports.get(0);
+                    Transport nextTransport = connectedTransports.get(1);
+                    Path nextPath = nextTransport.getPath();
+
+                    System.out.println("nextTransport: " + nextTransport);
+
                     if (connectedTransports.size() == 3) {
-                        if (connectedTransports.get(0) instanceof Producer producer) {
-                            producer.getPath().setNext(connectedTransports.get(1).getPath());
-                            connectedTransports.get(1).getPath().setPrevious(producer.getPath());
-                        } else if (connectedTransports.get(0) instanceof Belt belt) {
-                            belt.getPath().setNext(connectedTransports.get(1).getPath());
-                            connectedTransports.get(1).getPath().setPrevious(belt.getPath());
+                        Transport thirdTransport = connectedTransports.get(2);
+                        
+                        if (transport instanceof Producer producer) {
+                            producer.setOutput(nextPath);
+                            nextTransport.setInput(producer.getPath());
+                        } else if (transport instanceof Belt belt) {
+                            if (nextTransport instanceof Producer producer) {
+                                belt.setInput(producer.getPath());
+                                producer.setOutput(belt.getPath());
+                            } else {
+                                belt.setOutput(nextTransport.getPath());
+                                nextTransport.setInput(belt.getPath());
+                            }
+                        } else if (transport instanceof Receiver receiver) {
+                            receiver.setInput(nextPath);
+                            nextTransport.setOutput(receiver.getPath());
                         }
-                        if (connectedTransports.get(1) instanceof Belt belt) {
-                            belt.getPath().setNext(connectedTransports.get(2).getPath());
-                            connectedTransports.get(2).getPath().setPrevious(belt.getPath());
+
+
+                        if (nextTransport instanceof Producer producer) {
+                            producer.setOutput(thirdTransport.getPath());
+                            thirdTransport.setInput(producer.getPath());
+                        } else if (nextTransport instanceof Belt belt) {
+                            if (thirdTransport instanceof Producer) {
+                                belt.setInput(thirdTransport.getPath());
+                                thirdTransport.setOutput(belt.getPath());
+                            } else {
+                                belt.setOutput(thirdTransport.getPath());
+                                thirdTransport.setInput(belt.getPath());
+                            }
+                        } else if (nextTransport instanceof Receiver receiver) {
+                            receiver.setInput(thirdTransport.getPath());
+                            thirdTransport.setOutput(receiver.getPath());
                         }
                     } else if (connectedTransports.size() == 2) {
-                        if (connectedTransports.get(0) instanceof Producer producer) {
-                            producer.getPath().setNext(connectedTransports.get(1).getPath());
-                            connectedTransports.get(1).getPath().setPrevious(producer.getPath());
-                        }
-                        if (connectedTransports.get(0) instanceof Belt belt) {
-                            belt.getPath().setNext(connectedTransports.get(1).getPath());
-                            connectedTransports.get(1).getPath().setPrevious(belt.getPath());
-                        }
-                        if (connectedTransports.get(0) instanceof Receiver receiver) {
-                            receiver.getPath().setPrevious(connectedTransports.get(1).getPath());
-                            connectedTransports.get(1).getPath().setNext(receiver.getPath());
+                        if (transport instanceof Producer producer) {
+                            producer.setOutput(nextPath);
+                            nextTransport.setInput(producer.getPath());
+                        } else if (transport instanceof Belt belt) {
+                            if (nextTransport instanceof Producer producer) {
+                                belt.setInput(producer.getPath());
+                                producer.setOutput(belt.getPath());
+                            } else {
+                                belt.setOutput(nextTransport.getPath());
+                                nextTransport.setInput(belt.getPath());
+                            }
+                        } else if (transport instanceof Receiver receiver) {
+                            receiver.setInput(nextPath);
+                            nextTransport.setOutput(receiver.getPath());
                         }
                     }
 
@@ -394,7 +426,7 @@ public class GameLoader {
 
             System.out.println("Finished parsing sections");
 
-            System.out.println("all paths " + transports.stream().map(t -> t.getPath()).toList());
+            System.out.println("all paths " + transports.stream().map(t -> t.getPath().toString()).collect(Collectors.joining(System.lineSeparator())));
 
             if (grid != null && gameGrid != null) {
                 Map<Coordinate, GridComponent> map = gameGrid.getGrid();
@@ -409,43 +441,71 @@ public class GameLoader {
 
                         Orientation orientation = getOrientation(row, column, grid);
 
-                        System.out.printf("nodeType: %s; [i][j]: [%d][%d]; orientation: %s%n", nodeType, row, column, orientation);
+                        int distance = calculateDistance(row, column, range, range);
 
+                        System.out.printf("nodeType: %s; [i][j]: [%d][%d]; orientation: %s; distance: %d%n", nodeType, row, column, orientation, distance);
+
+                        //System.out.printf("distance from %s: [%d][%d] to [%d][%d] = %d%n", nodeType, row, column, range, range, distance);
                         if (orientation != null) {
+
+                            System.out.printf("rows abs (%d - %d) = %d; cols abs (%d - %d) = %d%n", range, row, Math.abs(range - row), range, column, Math.abs(range - column));
+
                             switch (orientation) {
                                 case TOP_LEFT -> {
-                                    coordinate = origin.getTopLeft();
+                                    if (Math.abs(range - row) <= 1 && Math.abs(range - column) <= 1) {
+                                        coordinate = origin.getTopLeft();
+                                    } else {
+                                        coordinate = origin.getTopLeft().getRight();
+                                    }
                                 }
                                 case TOP_RIGHT -> {
-                                    coordinate = origin.getTopRight();
+                                    if (Math.abs(range - row) <= 1 && Math.abs(range - column) <= 1) {
+                                        coordinate = origin.getTopRight();
+                                    } else {
+                                        coordinate = origin.getTopRight().getTopRight();
+                                    }
                                 }
                                 case LEFT -> {
-                                    coordinate = origin.getLeft();
+                                    if (Math.abs(range - row) <= 1 && Math.abs(range - column) <= 1) {
+                                        coordinate = origin.getLeft();
+                                    } else {
+                                        coordinate = origin.getLeft().getLeft();
+                                    }
                                 }
                                 case RIGHT -> {
-                                    coordinate = origin.getRight();
+                                    if (Math.abs(range - row) <= 1 && Math.abs(range - column) <= 1) {
+                                        coordinate = origin.getRight();
+                                    } else {
+                                        coordinate = origin.getRight().getRight();
+                                    }
                                 }
                                 case BOTTOM_LEFT -> {
-                                    coordinate = origin.getBottomLeft();
+                                    if (Math.abs(range - row) <= 1 && Math.abs(range - column) <= 1) {
+                                        coordinate = origin.getBottomLeft();
+                                    } else {
+                                        coordinate = origin.getBottomLeft().getBottomLeft();
+                                    }
                                 }
                                 case BOTTOM_RIGHT -> {
-                                    coordinate = origin.getBottomRight();
+                                    if (Math.abs(range - row) <= 1 && Math.abs(range - column) <= 1) {
+                                        coordinate = origin.getBottomRight();
+                                    } else {
+                                        coordinate = origin.getBottomRight().getBottomRight();
+                                    }
                                 }
                             }
                         } else {
                             coordinate = origin;
                         }
 
-                        if (coordinate != null) {
-                            switch (nodeType) {
-                                case 'p', 'r', 'b' ->
-                                    gameGrid.setCoordinate(coordinate, transports.pop());
-                                case 's', 'o', 'w' -> {
-                                    gameGrid.setCoordinate(coordinate, () -> String.valueOf(nodeType));
-                                }
-                                default ->
-                                    throw new FileFormatException("Invalid node type: " + nodeType);
+                        switch (nodeType) {
+                            case 'p', 'r', 'b' ->
+                                gameGrid.setCoordinate(coordinate, transports.pop());
+                            case 's', 'o', 'w' -> {
+                                gameGrid.setCoordinate(coordinate, () -> String.valueOf(nodeType));
                             }
+                            default ->
+                                throw new FileFormatException("Invalid node type: " + nodeType);
                         }
 
                     }
@@ -481,6 +541,11 @@ public class GameLoader {
         } else {
             return null;  // Invalid position
         }
+    }
+
+    public static int calculateDistance(int rowIndex1, int columnIndex1,
+            int rowIndex2, int columnIndex2) {
+        return Math.abs(rowIndex1 - rowIndex2) + Math.abs(columnIndex1 - columnIndex2);
     }
 
 }
