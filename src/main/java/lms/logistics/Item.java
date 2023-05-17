@@ -8,6 +8,9 @@ import java.util.Objects;
  */
 public class Item {
 
+    /**
+     * Name of the item.
+     */
     private final String name;
 
     /**
