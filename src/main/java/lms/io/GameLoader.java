@@ -422,6 +422,14 @@ public class GameLoader {
         }
     }
 
+    /**
+     * Retrieves the coordinate based on the given row, column, and grid.
+     *
+     * @param row The row index in the grid.
+     * @param column The column index in the grid.
+     * @param grid The 2D grid containing the nodes.
+     * @return The coordinate corresponding to the given row, column, and grid.
+     */
     private static Coordinate getCoordinate(int row, int column, char[][] grid) {
         Coordinate origin = new Coordinate();
         Coordinate coordinate = null;
@@ -455,27 +463,37 @@ public class GameLoader {
         return coordinate;
     }
 
-    private static Orientation getOrientation(int rowIndex, int columnIndex,
-            char[][] hexagon) {
-        int middleRowIndex = hexagon.length / 2;
-        int middleColumnIndex = hexagon[middleRowIndex].length / 2;
+    /**
+     * Retrieves the orientation based on the given row index, column index, and
+     * hexagon grid.
+     *
+     * @param row The row index in the hexagon grid.
+     * @param column The column index in the hexagon grid.
+     * @param grid The 2D array representing the hexagon grid.
+     * @return The orientation of the element at the specified row and column
+     * indexes.
+     */
+    private static Orientation getOrientation(int row, int column, char[][] grid) {
+        int middleRow = grid.length / 2;
+        int middleColumn = grid[middleRow].length / 2;
 
-        int rowDifference = rowIndex - middleRowIndex;
-        int columnDifference = columnIndex - middleColumnIndex;
+        int rowDiff = row - middleRow;
+        int columnDiff = column - middleColumn;
 
-        if (rowDifference == 0 && columnDifference == 0) {
-            return null;  // Element is at the center, no direction
-        } else if (rowDifference < 0 && columnDifference >= 0) {
+        if (rowDiff == 0 && columnDiff == 0) {
+            // Element is at the center, no direction
+            return null;
+        } else if (rowDiff < 0 && columnDiff >= 0) {
             return Orientation.TOP_RIGHT;
-        } else if (rowDifference < 0 && columnDifference < 0) {
+        } else if (rowDiff < 0 && columnDiff < 0) {
             return Orientation.TOP_LEFT;
-        } else if (rowDifference == 0 && columnDifference < 0) {
+        } else if (rowDiff == 0 && columnDiff < 0) {
             return Orientation.LEFT;
-        } else if (rowDifference == 0 && columnDifference > 0) {
+        } else if (rowDiff == 0 && columnDiff > 0) {
             return Orientation.RIGHT;
-        } else if (rowDifference > 0 && columnDifference >= 0) {
+        } else if (rowDiff > 0 && columnDiff >= 0) {
             return Orientation.BOTTOM_RIGHT;
-        } else if (rowDifference > 0 && columnDifference < 0) {
+        } else if (rowDiff > 0 && columnDiff < 0) {
             return Orientation.BOTTOM_LEFT;
         } else {
             return null;
