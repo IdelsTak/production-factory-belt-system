@@ -358,60 +358,39 @@ public class GameLoader {
                             })
                             .toList();
 
-                    Transport transport = connectedTransports.stream().filter(t -> t.getId() == linkingData.get(0)).findFirst().orElseThrow();
-                    Transport nextTransport = connectedTransports.stream().filter(t -> t.getId() == linkingData.get(1)).findFirst().orElseThrow();
-                    Path nextPath = nextTransport.getPath();
+                    Transport firstTransport = connectedTransports.stream().filter(t -> t.getId() == linkingData.get(0)).findFirst().orElseThrow();
+                    Transport secondTransport = connectedTransports.stream().filter(t -> t.getId() == linkingData.get(1)).findFirst().orElseThrow();
 
                     System.out.println("linking data: " + linkingData);
-                    System.out.println("nextTransport: " + nextTransport);
 
-                    if (connectedTransports.size() == 3) {
+                    if (connectedTransports.size() == 2) {
+                        System.out.println("connectedTransports: " + List.of(firstTransport, secondTransport));
+
+                        if (firstTransport instanceof Producer producer) {
+                            producer.setOutput(secondTransport.getPath());
+                            secondTransport.setInput(producer.getPath());
+                        } else if (firstTransport instanceof Receiver receiver) {
+                            receiver.setInput(secondTransport.getPath());
+                            secondTransport.setOutput(receiver.getPath());
+                        } else {
+                            if (secondTransport instanceof Producer producer) {
+                                firstTransport.setInput(producer.getPath());
+                                producer.setOutput(firstTransport.getPath());
+                            } else {
+                                firstTransport.setOutput(secondTransport.getPath());
+                                secondTransport.setInput(firstTransport.getPath());
+                            }
+                        }
+                    } else if (connectedTransports.size() == 3) {
                         Transport thirdTransport = connectedTransports.stream().filter(t -> t.getId() == linkingData.get(2)).findFirst().orElseThrow();
-                        System.out.println("connectedTransports: " + List.of(transport, nextTransport, thirdTransport));
+                        System.out.println("connectedTransports: " + List.of(firstTransport, secondTransport, thirdTransport));
 
-                        if (transport instanceof Producer producer) {
-                            producer.setOutput(nextPath);
-                            nextTransport.setInput(producer.getPath());
-                        } else if (transport instanceof Belt belt) {
-                            if (nextTransport instanceof Producer producer) {
-                                belt.setInput(producer.getPath());
-                                producer.setOutput(belt.getPath());
-                            } else {
-                                belt.setOutput(nextTransport.getPath());
-                                nextTransport.setInput(belt.getPath());
-                            }
-                        } else if (transport instanceof Receiver receiver) {
-                            receiver.setInput(nextPath);
-                            nextTransport.setOutput(receiver.getPath());
-                        }
-
-                        if (nextTransport instanceof Producer producer) {
-                            producer.setOutput(thirdTransport.getPath());
-                            thirdTransport.setInput(producer.getPath());
-                        } else if (nextTransport instanceof Belt belt) {
-                            if (thirdTransport instanceof Producer) {
-                                belt.setInput(thirdTransport.getPath());
-                                thirdTransport.setOutput(belt.getPath());
-                            } else {
-                                belt.setOutput(thirdTransport.getPath());
-                                thirdTransport.setInput(belt.getPath());
-                            }
-                        } else if (nextTransport instanceof Receiver receiver) {
-                            receiver.setInput(thirdTransport.getPath());
-                            thirdTransport.setOutput(receiver.getPath());
-                        }
-                    } else if (connectedTransports.size() == 2) {
-                        System.out.println("connectedTransports: " + List.of(transport, nextTransport));
-
-                        if (transport instanceof Producer producer) {
-                            producer.setOutput(nextPath);
-                            nextTransport.setInput(producer.getPath());
-                        } else if (transport instanceof Belt belt) {
-                            belt.setOutput(nextTransport.getPath());
-                            nextTransport.setInput(belt.getPath());
-                        } else if (transport instanceof Receiver receiver) {
-                            receiver.setInput(nextPath);
-                            nextTransport.setOutput(receiver.getPath());
+                        if (firstTransport instanceof Belt belt) {
+                            belt.setInput(secondTransport.getPath());
+                            secondTransport.setOutput(belt.getPath());
+                            belt.setOutput(thirdTransport.getPath());
+                        } else if (thirdTransport instanceof Receiver receiver) {
+                            receiver.setInput(firstTransport.getPath());
                         }
                     }
 
@@ -447,46 +426,22 @@ public class GameLoader {
 
                             switch (orientation) {
                                 case TOP_LEFT -> {
-                                    if (Math.abs(range - row) <= 1 && Math.abs(range - column) <= 1) {
-                                        coordinate = origin.getTopLeft();
-                                    } else {
-                                        coordinate = origin.getTopLeft().getRight();
-                                    }
+                                    coordinate = origin.getTopLeft();
                                 }
                                 case TOP_RIGHT -> {
-                                    if (Math.abs(range - row) <= 1 && Math.abs(range - column) <= 1) {
-                                        coordinate = origin.getTopRight();
-                                    } else {
-                                        coordinate = origin.getTopRight().getTopRight();
-                                    }
+                                    coordinate = origin.getTopRight();
                                 }
                                 case LEFT -> {
-                                    if (Math.abs(range - row) <= 1 && Math.abs(range - column) <= 1) {
-                                        coordinate = origin.getLeft();
-                                    } else {
-                                        coordinate = origin.getLeft().getLeft();
-                                    }
+                                    coordinate = origin.getLeft();
                                 }
                                 case RIGHT -> {
-                                    if (Math.abs(range - row) <= 1 && Math.abs(range - column) <= 1) {
-                                        coordinate = origin.getRight();
-                                    } else {
-                                        coordinate = origin.getRight().getRight();
-                                    }
+                                    coordinate = origin.getRight();
                                 }
                                 case BOTTOM_LEFT -> {
-                                    if (Math.abs(range - row) <= 1 && Math.abs(range - column) <= 1) {
-                                        coordinate = origin.getBottomLeft();
-                                    } else {
-                                        coordinate = origin.getBottomLeft().getBottomLeft();
-                                    }
+                                    coordinate = origin.getBottomLeft();
                                 }
                                 case BOTTOM_RIGHT -> {
-                                    if (Math.abs(range - row) <= 1 && Math.abs(range - column) <= 1) {
-                                        coordinate = origin.getBottomRight();
-                                    } else {
-                                        coordinate = origin.getBottomRight().getBottomRight();
-                                    }
+                                    coordinate = origin.getBottomRight();
                                 }
                             }
                         } else {
