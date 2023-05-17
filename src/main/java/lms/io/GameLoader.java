@@ -405,78 +405,36 @@ public class GameLoader {
                 for (int row = 0; row < grid.length; row++) {
                     for (int column = 0; column < grid[row].length; column++) {
                         char nodeType = grid[row][column];
+                        Coordinate coordinate = null;
 
                         if (row == 0 && column == 0) {
-                            switch (nodeType) {
-                                case 'p', 'r', 'b' ->
-                                    gameGrid.setCoordinate(origin.getTopLeft(), transports.pop());
-                                case 's', 'o', 'w' -> {
-                                    gameGrid.setCoordinate(origin.getTopLeft(), () -> String.valueOf(nodeType));
-                                }
-                                default ->
-                                    throw new FileFormatException("Invalid node type: " + nodeType);
-                            }
+                            coordinate = origin.getTopLeft();
                         } else if (row == 0 && column == 1) {
-                            switch (nodeType) {
-                                case 'p', 'r', 'b' ->
-                                    gameGrid.setCoordinate(origin.getTopRight(), transports.pop());
-                                case 's', 'o', 'w' -> {
-                                    gameGrid.setCoordinate(origin.getTopRight(), () -> String.valueOf(nodeType));
-                                }
-                                default ->
-                                    throw new FileFormatException("Invalid node type: " + nodeType);
-                            }
+                            coordinate = origin.getTopRight();
                         } else if (row == 1 && column == 0) {
-                            switch (nodeType) {
-                                case 'p', 'r', 'b' ->
-                                    gameGrid.setCoordinate(origin.getLeft(), transports.pop());
-                                case 's', 'o', 'w' -> {
-                                    gameGrid.setCoordinate(origin.getLeft(), () -> String.valueOf(nodeType));
-                                }
-                                default ->
-                                    throw new FileFormatException("Invalid node type: " + nodeType);
-                            }
+                            coordinate = origin.getLeft();
                         } else if (row == 1 && column == 1) {
-                            switch (nodeType) {
-                                case 'p', 'r', 'b' ->
-                                    gameGrid.setCoordinate(origin, transports.pop());
-                                case 's', 'o', 'w' -> {
-                                    gameGrid.setCoordinate(origin, () -> String.valueOf(nodeType));
-                                }
-                                default ->
-                                    throw new FileFormatException("Invalid node type: " + nodeType);
-                            }
+                            coordinate = origin;
                         } else if (row == 1 && column > 1) {
-                            switch (nodeType) {
-                                case 'p', 'r', 'b' ->
-                                    gameGrid.setCoordinate(origin.getRight(), transports.pop());
-                                case 's', 'o', 'w' -> {
-                                    gameGrid.setCoordinate(origin.getRight(), () -> String.valueOf(nodeType));
-                                }
-                                default ->
-                                    throw new FileFormatException("Invalid node type: " + nodeType);
-                            }
+                            coordinate = origin.getRight();
                         } else if (row > 1 && column == 0) {
-                            switch (nodeType) {
-                                case 'p', 'r', 'b' ->
-                                    gameGrid.setCoordinate(origin.getBottomLeft(), transports.pop());
-                                case 's', 'o', 'w' -> {
-                                    gameGrid.setCoordinate(origin.getBottomLeft(), () -> String.valueOf(nodeType));
-                                }
-                                default ->
-                                    throw new FileFormatException("Invalid node type: " + nodeType);
-                            }
+                            coordinate = origin.getBottomLeft();
                         } else if (row > 1 && column > 0) {
+                            coordinate = origin.getBottomRight();
+                        }
+
+                        if (coordinate != null) {
                             switch (nodeType) {
                                 case 'p', 'r', 'b' ->
-                                    gameGrid.setCoordinate(origin.getBottomRight(), transports.pop());
+                                    gameGrid.setCoordinate(coordinate, transports.pop());
                                 case 's', 'o', 'w' -> {
-                                    gameGrid.setCoordinate(origin.getBottomRight(), () -> String.valueOf(nodeType));
+                                    gameGrid.setCoordinate(coordinate, () -> String.valueOf(nodeType));
                                 }
                                 default ->
                                     throw new FileFormatException("Invalid node type: " + nodeType);
                             }
                         }
+
                     }
 
                 }
