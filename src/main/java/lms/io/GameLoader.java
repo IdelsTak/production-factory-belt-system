@@ -389,7 +389,9 @@ public class GameLoader {
                             belt.setInput(secondTransport.getPath());
                             secondTransport.setOutput(belt.getPath());
                             belt.setOutput(thirdTransport.getPath());
-                        } else if (thirdTransport instanceof Receiver receiver) {
+                        }
+
+                        if (thirdTransport instanceof Receiver receiver) {
                             receiver.setInput(firstTransport.getPath());
                         }
                     }
@@ -406,24 +408,17 @@ public class GameLoader {
                 Map<Coordinate, GridComponent> map = gameGrid.getGrid();
                 LinkedList<Coordinate> coordinates = new LinkedList<>(map.keySet());
 
+                System.out.println("generated coordinates: " + coordinates.stream().map(c -> c.toString()).collect(Collectors.joining(System.lineSeparator())));
+
                 Coordinate origin = new Coordinate();
 
                 for (int row = 0; row < grid.length; row++) {
                     for (int column = 0; column < grid[row].length; column++) {
                         char nodeType = grid[row][column];
                         Coordinate coordinate = null;
-
                         Orientation orientation = getOrientation(row, column, grid);
 
-                        int distance = calculateDistance(row, column, range, range);
-
-                        System.out.printf("nodeType: %s; [i][j]: [%d][%d]; orientation: %s; distance: %d%n", nodeType, row, column, orientation, distance);
-
-                        //System.out.printf("distance from %s: [%d][%d] to [%d][%d] = %d%n", nodeType, row, column, range, range, distance);
                         if (orientation != null) {
-
-                            System.out.printf("rows abs (%d - %d) = %d; cols abs (%d - %d) = %d%n", range, row, Math.abs(range - row), range, column, Math.abs(range - column));
-
                             switch (orientation) {
                                 case TOP_LEFT -> {
                                     coordinate = origin.getTopLeft();
@@ -466,7 +461,7 @@ public class GameLoader {
         }
     }
 
-    public static Orientation getOrientation(int rowIndex, int columnIndex,
+    private static Orientation getOrientation(int rowIndex, int columnIndex,
             char[][] hexagon) {
         int middleRowIndex = hexagon.length / 2;
         int middleColumnIndex = hexagon[middleRowIndex].length / 2;
@@ -491,11 +486,6 @@ public class GameLoader {
         } else {
             return null;  // Invalid position
         }
-    }
-
-    public static int calculateDistance(int rowIndex1, int columnIndex1,
-            int rowIndex2, int columnIndex2) {
-        return Math.abs(rowIndex1 - rowIndex2) + Math.abs(columnIndex1 - columnIndex2);
     }
 
 }
