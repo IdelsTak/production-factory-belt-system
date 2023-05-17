@@ -348,9 +348,7 @@ public class GameLoader {
 
                     List<Transport> connectedTransports = transports
                             .stream()
-                            .filter(t -> {
-                                return linkingData.contains(t.getId());
-                            })
+                            .filter(t -> linkingData.contains(t.getId()))
                             .toList();
 
                     Transport firstTransport = connectedTransports
@@ -442,24 +440,12 @@ public class GameLoader {
 
         if (orientation != null) {
             switch (orientation) {
-                case TOP_LEFT -> {
-                    coordinate = origin.getTopLeft();
-                }
-                case TOP_RIGHT -> {
-                    coordinate = origin.getTopRight();
-                }
-                case LEFT -> {
-                    coordinate = origin.getLeft();
-                }
-                case RIGHT -> {
-                    coordinate = origin.getRight();
-                }
-                case BOTTOM_LEFT -> {
-                    coordinate = origin.getBottomLeft();
-                }
-                case BOTTOM_RIGHT -> {
-                    coordinate = origin.getBottomRight();
-                }
+                case TOP_LEFT -> coordinate = origin.getTopLeft();
+                case TOP_RIGHT -> coordinate = origin.getTopRight();
+                case LEFT -> coordinate = origin.getLeft();
+                case RIGHT -> coordinate = origin.getRight();
+                case BOTTOM_LEFT -> coordinate = origin.getBottomLeft();
+                case BOTTOM_RIGHT -> coordinate = origin.getBottomRight();
             }
         } else {
             coordinate = origin;
