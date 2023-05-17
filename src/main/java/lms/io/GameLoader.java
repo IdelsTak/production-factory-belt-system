@@ -407,20 +407,33 @@ public class GameLoader {
                         char nodeType = grid[row][column];
                         Coordinate coordinate = null;
 
-                        if (row == 0 && column == 0) {
-                            coordinate = origin.getTopLeft();
-                        } else if (row == 0 && column == 1) {
-                            coordinate = origin.getTopRight();
-                        } else if (row == 1 && column == 0) {
-                            coordinate = origin.getLeft();
-                        } else if (row == 1 && column == 1) {
+                        Orientation orientation = getOrientation(row, column, grid);
+
+                        System.out.printf("nodeType: %s; [i][j]: [%d][%d]; orientation: %s%n", nodeType, row, column, orientation);
+
+                        if (orientation != null) {
+                            switch (orientation) {
+                                case TOP_LEFT -> {
+                                    coordinate = origin.getTopLeft();
+                                }
+                                case TOP_RIGHT -> {
+                                    coordinate = origin.getTopRight();
+                                }
+                                case LEFT -> {
+                                    coordinate = origin.getLeft();
+                                }
+                                case RIGHT -> {
+                                    coordinate = origin.getRight();
+                                }
+                                case BOTTOM_LEFT -> {
+                                    coordinate = origin.getBottomLeft();
+                                }
+                                case BOTTOM_RIGHT -> {
+                                    coordinate = origin.getBottomRight();
+                                }
+                            }
+                        } else {
                             coordinate = origin;
-                        } else if (row == 1 && column > 1) {
-                            coordinate = origin.getRight();
-                        } else if (row > 1 && column == 0) {
-                            coordinate = origin.getBottomLeft();
-                        } else if (row > 1 && column > 0) {
-                            coordinate = origin.getBottomRight();
                         }
 
                         if (coordinate != null) {
@@ -440,6 +453,33 @@ public class GameLoader {
                 }
             }
             return gameGrid;
+        }
+    }
+
+    public static Orientation getOrientation(int rowIndex, int columnIndex,
+            char[][] hexagon) {
+        int middleRowIndex = hexagon.length / 2;
+        int middleColumnIndex = hexagon[middleRowIndex].length / 2;
+
+        int rowDifference = rowIndex - middleRowIndex;
+        int columnDifference = columnIndex - middleColumnIndex;
+
+        if (rowDifference == 0 && columnDifference == 0) {
+            return null;  // Element is at the center, no direction
+        } else if (rowDifference < 0 && columnDifference >= 0) {
+            return Orientation.TOP_RIGHT;
+        } else if (rowDifference < 0 && columnDifference < 0) {
+            return Orientation.TOP_LEFT;
+        } else if (rowDifference == 0 && columnDifference < 0) {
+            return Orientation.LEFT;
+        } else if (rowDifference == 0 && columnDifference > 0) {
+            return Orientation.RIGHT;
+        } else if (rowDifference > 0 && columnDifference >= 0) {
+            return Orientation.BOTTOM_RIGHT;
+        } else if (rowDifference > 0 && columnDifference < 0) {
+            return Orientation.BOTTOM_LEFT;
+        } else {
+            return null;  // Invalid position
         }
     }
 
