@@ -6,7 +6,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lms.exceptions.FileFormatException;
 import lms.grid.*;
-import lms.logistics.*;
+import lms.logistics.Item;
+import lms.logistics.Transport;
 import lms.logistics.belts.Belt;
 import lms.logistics.container.Producer;
 import lms.logistics.container.Receiver;
@@ -302,8 +303,6 @@ public class GameLoader {
                 }
 
                 if (sectionCount == 5) {
-                    System.out.println(Arrays.deepToString(grid));
-
                     if (gameGrid == null) {
                         gameGrid = new GameGrid(range);
                         int componentsCount = 1;
@@ -317,21 +316,18 @@ public class GameLoader {
                                         transports.add(belt);
                                         componentsCount++;
                                     }
-
                                     case 'p' -> {
                                         Item item = producerItems.pop();
                                         Producer producer = new Producer(componentsCount, item);
                                         transports.add(producer);
                                         componentsCount++;
                                     }
-
                                     case 'r' -> {
                                         Item item = receiverItems.pop();
                                         Receiver receiver = new Receiver(componentsCount, item);
                                         transports.add(receiver);
                                         componentsCount++;
                                     }
-
                                     default -> {
                                     }
                                 }
@@ -357,14 +353,20 @@ public class GameLoader {
                             })
                             .toList();
 
-                    Transport firstTransport = connectedTransports.stream().filter(t -> t.getId() == linkingData.get(0)).findFirst().orElseThrow();
-                    Transport secondTransport = connectedTransports.stream().filter(t -> t.getId() == linkingData.get(1)).findFirst().orElseThrow();
+                    Transport firstTransport = connectedTransports
+                            .stream()
+                            .filter(t -> t.getId() == linkingData.get(0))
+                            .findFirst()
+                            .orElseThrow();
+                    Transport secondTransport = connectedTransports
+                            .stream()
+                            .filter(t -> t.getId() == linkingData.get(1))
+                            .findFirst()
+                            .orElseThrow();
 
                     System.out.println("linking data: " + linkingData);
 
                     if (connectedTransports.size() == 2) {
-                        System.out.println("connectedTransports: " + List.of(firstTransport, secondTransport));
-
                         if (firstTransport instanceof Producer producer) {
                             producer.setOutput(secondTransport.getPath());
                             secondTransport.setInput(producer.getPath());
@@ -381,8 +383,11 @@ public class GameLoader {
                             }
                         }
                     } else if (connectedTransports.size() == 3) {
-                        Transport thirdTransport = connectedTransports.stream().filter(t -> t.getId() == linkingData.get(2)).findFirst().orElseThrow();
-                        System.out.println("connectedTransports: " + List.of(firstTransport, secondTransport, thirdTransport));
+                        Transport thirdTransport = connectedTransports
+                                .stream()
+                                .filter(t -> t.getId() == linkingData.get(2))
+                                .findFirst()
+                                .orElseThrow();
 
                         if (firstTransport instanceof Belt belt) {
                             belt.setInput(secondTransport.getPath());
