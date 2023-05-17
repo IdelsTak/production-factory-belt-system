@@ -4,7 +4,6 @@ import java.io.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import lms.exceptions.FileFormatException;
 import lms.grid.*;
 import lms.logistics.*;
@@ -402,63 +401,58 @@ public class GameLoader {
 
             System.out.println("Finished parsing sections");
 
-            System.out.println("all paths " + transports.stream().map(t -> t.getPath().toString()).collect(Collectors.joining(System.lineSeparator())));
-
             if (grid != null && gameGrid != null) {
-                Map<Coordinate, GridComponent> map = gameGrid.getGrid();
-                LinkedList<Coordinate> coordinates = new LinkedList<>(map.keySet());
-
-                System.out.println("generated coordinates: " + coordinates.stream().map(c -> c.toString()).collect(Collectors.joining(System.lineSeparator())));
-
-                Coordinate origin = new Coordinate();
-
                 for (int row = 0; row < grid.length; row++) {
                     for (int column = 0; column < grid[row].length; column++) {
                         char nodeType = grid[row][column];
-                        Coordinate coordinate = null;
-                        Orientation orientation = getOrientation(row, column, grid);
-
-                        if (orientation != null) {
-                            switch (orientation) {
-                                case TOP_LEFT -> {
-                                    coordinate = origin.getTopLeft();
-                                }
-                                case TOP_RIGHT -> {
-                                    coordinate = origin.getTopRight();
-                                }
-                                case LEFT -> {
-                                    coordinate = origin.getLeft();
-                                }
-                                case RIGHT -> {
-                                    coordinate = origin.getRight();
-                                }
-                                case BOTTOM_LEFT -> {
-                                    coordinate = origin.getBottomLeft();
-                                }
-                                case BOTTOM_RIGHT -> {
-                                    coordinate = origin.getBottomRight();
-                                }
-                            }
-                        } else {
-                            coordinate = origin;
-                        }
+                        Coordinate coordinate = getCoordinate(row, column, grid);
 
                         switch (nodeType) {
                             case 'p', 'r', 'b' ->
                                 gameGrid.setCoordinate(coordinate, transports.pop());
-                            case 's', 'o', 'w' -> {
+                            case 's', 'o', 'w' ->
                                 gameGrid.setCoordinate(coordinate, () -> String.valueOf(nodeType));
-                            }
                             default ->
                                 throw new FileFormatException("Invalid node type: " + nodeType);
                         }
-
                     }
-
                 }
             }
             return gameGrid;
         }
+    }
+
+    private static Coordinate getCoordinate(int row, int column, char[][] grid) {
+        Coordinate origin = new Coordinate();
+        Coordinate coordinate = null;
+        Orientation orientation = getOrientation(row, column, grid);
+
+        if (orientation != null) {
+            switch (orientation) {
+                case TOP_LEFT -> {
+                    coordinate = origin.getTopLeft();
+                }
+                case TOP_RIGHT -> {
+                    coordinate = origin.getTopRight();
+                }
+                case LEFT -> {
+                    coordinate = origin.getLeft();
+                }
+                case RIGHT -> {
+                    coordinate = origin.getRight();
+                }
+                case BOTTOM_LEFT -> {
+                    coordinate = origin.getBottomLeft();
+                }
+                case BOTTOM_RIGHT -> {
+                    coordinate = origin.getBottomRight();
+                }
+            }
+        } else {
+            coordinate = origin;
+        }
+
+        return coordinate;
     }
 
     private static Orientation getOrientation(int rowIndex, int columnIndex,
@@ -484,7 +478,7 @@ public class GameLoader {
         } else if (rowDifference > 0 && columnDifference < 0) {
             return Orientation.BOTTOM_LEFT;
         } else {
-            return null;  // Invalid position
+            return null;
         }
     }
 
