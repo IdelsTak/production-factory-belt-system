@@ -236,7 +236,6 @@ public class GameLoader {
             FileFormatException {
         try (BufferedReader in = new BufferedReader(reader)) {
             int range = -1;
-
             String line;
             int lineCount = 0;
             int sectionCount = 0;
@@ -256,7 +255,6 @@ public class GameLoader {
 
                 if (lineCount == 1) {
                     range = Integer.parseInt(line);
-                    System.out.printf("range: %d%n", range);
                     continue;
                 }
 
@@ -265,45 +263,43 @@ public class GameLoader {
                     continue;
                 }
 
-                if (sectionCount == 1) {
-                    if (numOfProducers == -1 && numOfReceivers == -1) {
-                        numOfProducers = Integer.parseInt(line);
-                    } else if (numOfProducers != -1 && numOfReceivers == -1) {
-                        numOfReceivers = Integer.parseInt(line);
+                switch (sectionCount) {
+                    case 1 -> {
+                        if (numOfProducers == -1 && numOfReceivers == -1) {
+                            numOfProducers = Integer.parseInt(line);
+                        } else if (numOfProducers != -1 && numOfReceivers == -1) {
+                            numOfReceivers = Integer.parseInt(line);
+                        }
                     }
-                }
-
-                if (sectionCount == 2) {
-                    if (createdProducersCount < numOfProducers) {
-                        createdProducersCount++;
-                        producerItems.add(new Item(line));
+                    case 2 -> {
+                        if (createdProducersCount < numOfProducers) {
+                            createdProducersCount++;
+                            producerItems.add(new Item(line));
+                        }
                     }
-                }
-
-                if (sectionCount == 3) {
-                    if (createdReceiversCount < numOfReceivers) {
-                        createdReceiversCount++;
-                        receiverItems.add(new Item(line));
+                    case 3 -> {
+                        if (createdReceiversCount < numOfReceivers) {
+                            createdReceiversCount++;
+                            receiverItems.add(new Item(line));
+                        }
                     }
-                }
+                    case 4 -> {
+                        if (grid == null) {
+                            grid = new char[range * 2 + 1][];
+                        }
 
-                if (sectionCount == 4) {
-                    if (grid == null) {
-                        grid = new char[range * 2 + 1][];
+                        String gridLine = line.trim().replaceAll("\\s", "");
+                        grid[gridLineCount] = gridLine.toCharArray();
+                        gridLineCount++;
                     }
+                    case 5 -> {
+                        if (gameGrid == null) {
+                            gameGrid = new GameGrid(range);
+                            createTransports(grid, transports, producerItems, receiverItems);
+                        }
 
-                    String gridLine = line.trim().replaceAll("\\s", "");
-                    grid[gridLineCount] = gridLine.toCharArray();
-                    gridLineCount++;
-                }
-
-                if (sectionCount == 5) {
-                    if (gameGrid == null) {
-                        gameGrid = new GameGrid(range);
-                        createTransports(grid, transports, producerItems, receiverItems);
+                        parsePathsData(line, transports);
                     }
-
-                    parsePathsData(line, transports);
                 }
 
             }
@@ -320,7 +316,7 @@ public class GameLoader {
             LinkedList<Transport> transports, LinkedList<Item> producerItems,
             LinkedList<Item> receiverItems) {
         int componentsCount = 1;
-        
+
         for (char[] row : grid) {
             for (int column = 0; column < row.length; column++) {
                 char element = row[column];
