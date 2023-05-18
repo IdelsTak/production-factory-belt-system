@@ -276,9 +276,4 @@ public class Coordinate {
         );
     }
 
-    @Override
-    public String toString() {
-        return "Coordinate{" + "cordQ=" + cordQ + ", cordR=" + cordR + ", cordS=" + cordS + '}';
-    }
-
 }
