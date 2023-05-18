@@ -312,6 +312,18 @@ public class GameLoader {
         }
     }
 
+    /**
+     * Creates transports (belts, producers, and receivers) based on the
+     * provided grid data.
+     *
+     * @param grid the grid data representing the layout of components
+     * @param transports the list of transports to populate with created
+     * transports
+     * @param producerItems the list of producer items to assign to producer
+     * transports
+     * @param receiverItems the list of receiver items to assign to receiver
+     * transports
+     */
     private static void createTransports(char[][] grid,
             LinkedList<Transport> transports, LinkedList<Item> producerItems,
             LinkedList<Item> receiverItems) {
@@ -345,6 +357,16 @@ public class GameLoader {
         }
     }
 
+    /**
+     * Sets the coordinates for transports and other components in the game grid
+     * based on the provided grid data.
+     *
+     * @param gameGrid the game grid object to set the coordinates on
+     * @param grid the grid data representing the layout of components
+     * @param transports the list of transports to assign coordinates to
+     * @throws FileFormatException if there is an error in the file format or if
+     * there are invalid node types in the grid
+     */
     private static void setCoordinates(GameGrid gameGrid, char[][] grid,
             LinkedList<Transport> transports) throws FileFormatException {
         Comparator<Coordinate> comparator = Comparator
@@ -395,6 +417,15 @@ public class GameLoader {
         }
     }
 
+    /**
+     * Parses a line of paths' data and establishes connections between
+     * transports.
+     *
+     * @param line the line of paths' data to parse
+     * @param transports the list of transports to establish connections on
+     * @throws FileFormatException if there is an error in the file format or if
+     * a transport with the specified ID is not found
+     */
     private static void parsePathsData(String line,
             List<Transport> transports) throws FileFormatException {
 
@@ -453,6 +484,15 @@ public class GameLoader {
         }
     }
 
+    /**
+     * Finds a Transport object with the specified ID from a list of Transports.
+     *
+     * @param transports the list of Transports to search from
+     * @param id the ID of the Transport to find
+     * @return the Transport object with the specified ID
+     * @throws FileFormatException if the Transport with the specified ID is not
+     * found in the list
+     */
     private static Transport findTransport(List<Transport> transports, int id) throws
             FileFormatException {
         return transports
