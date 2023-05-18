@@ -2,7 +2,6 @@ package lms.io;
 
 import java.io.*;
 import java.util.*;
-import java.util.stream.Collectors;
 import lms.exceptions.FileFormatException;
 import lms.grid.*;
 import lms.logistics.Item;
@@ -301,34 +300,7 @@ public class GameLoader {
                 if (sectionCount == 5) {
                     if (gameGrid == null) {
                         gameGrid = new GameGrid(range);
-                        int componentsCount = 1;
-
-                        for (int i = 0; i < grid.length; i++) {
-                            for (int j = 0; j < grid[i].length; j++) {
-                                char element = grid[i][j];
-                                switch (element) {
-                                    case 'b' -> {
-                                        Belt belt = new Belt(componentsCount);
-                                        transports.add(belt);
-                                        componentsCount++;
-                                    }
-                                    case 'p' -> {
-                                        Item item = producerItems.pop();
-                                        Producer producer = new Producer(componentsCount, item);
-                                        transports.add(producer);
-                                        componentsCount++;
-                                    }
-                                    case 'r' -> {
-                                        Item item = receiverItems.pop();
-                                        Receiver receiver = new Receiver(componentsCount, item);
-                                        transports.add(receiver);
-                                        componentsCount++;
-                                    }
-                                    default -> {
-                                    }
-                                }
-                            }
-                        }
+                        createTransports(grid, transports, producerItems, receiverItems);
                     }
 
                     parsePathsData(line, transports);
@@ -336,58 +308,94 @@ public class GameLoader {
 
             }
 
-            System.out.println("Finished parsing sections");
-
             if (grid != null && gameGrid != null) {
-                Comparator<Coordinate> comparator = Comparator
-                        .comparingInt(Coordinate::getCordR)
-                        .thenComparingInt(Coordinate::getCordQ);
-                List<Coordinate> sortedCoordinates = gameGrid
-                        .getGrid()
-                        .keySet()
-                        .stream()
-                        .filter(c -> !c.equals(new Coordinate()))
-                        .sorted(comparator)
-                        .toList();
-                LinkedList<Coordinate> keys = new LinkedList<>(sortedCoordinates);
-                LinkedList<Character> flattenedGrid = new LinkedList<>();
-
-                for (char[] row : grid) {
-                    for (char element : row) {
-                        flattenedGrid.add(element);
-                    }
-                }
-
-                int middleIndex = flattenedGrid.size() / 2;
-
-                for (int i = 0; i < flattenedGrid.size(); i++) {
-                    Character element = flattenedGrid.get(i);
-                    Coordinate coordinate = null;
-
-                    if (i == middleIndex) {
-                        coordinate = new Coordinate();
-                    }
-
-                    if (!keys.isEmpty() && coordinate == null) {
-                        coordinate = keys.pop();
-                    }
-
-                    GridComponent component;
-
-                    switch (element) {
-                        case 'p', 'r', 'b' ->
-                            component = transports.pop();
-                        case 's', 'o', 'w' ->
-                            component = () -> String.valueOf(element);
-                        default ->
-                            throw new FileFormatException("Invalid node type: " + element);
-                    }
-
-                    gameGrid.setCoordinate(coordinate, component);
-                }
+                setCoordinates(gameGrid, grid, transports);
             }
 
             return gameGrid;
+        }
+    }
+
+    private static void createTransports(char[][] grid,
+            LinkedList<Transport> transports, LinkedList<Item> producerItems,
+            LinkedList<Item> receiverItems) {
+        int componentsCount = 1;
+        
+        for (char[] row : grid) {
+            for (int column = 0; column < row.length; column++) {
+                char element = row[column];
+                switch (element) {
+                    case 'b' -> {
+                        Belt belt = new Belt(componentsCount);
+                        transports.add(belt);
+                        componentsCount++;
+                    }
+                    case 'p' -> {
+                        Item item = producerItems.pop();
+                        Producer producer = new Producer(componentsCount, item);
+                        transports.add(producer);
+                        componentsCount++;
+                    }
+                    case 'r' -> {
+                        Item item = receiverItems.pop();
+                        Receiver receiver = new Receiver(componentsCount, item);
+                        transports.add(receiver);
+                        componentsCount++;
+                    }
+                    default -> {
+                    }
+                }
+            }
+        }
+    }
+
+    private static void setCoordinates(GameGrid gameGrid, char[][] grid,
+            LinkedList<Transport> transports) throws FileFormatException {
+        Comparator<Coordinate> comparator = Comparator
+                .comparingInt(Coordinate::getCordR)
+                .thenComparingInt(Coordinate::getCordQ);
+        List<Coordinate> sortedCoordinates = gameGrid
+                .getGrid()
+                .keySet()
+                .stream()
+                .filter(c -> !c.equals(new Coordinate()))
+                .sorted(comparator)
+                .toList();
+        LinkedList<Coordinate> keys = new LinkedList<>(sortedCoordinates);
+        LinkedList<Character> flattenedGrid = new LinkedList<>();
+
+        for (char[] row : grid) {
+            for (char element : row) {
+                flattenedGrid.add(element);
+            }
+        }
+
+        int middleIndex = flattenedGrid.size() / 2;
+
+        for (int i = 0; i < flattenedGrid.size(); i++) {
+            Character element = flattenedGrid.get(i);
+            Coordinate coordinate = null;
+
+            if (i == middleIndex) {
+                coordinate = new Coordinate();
+            }
+
+            if (!keys.isEmpty() && coordinate == null) {
+                coordinate = keys.pop();
+            }
+
+            GridComponent component;
+
+            switch (element) {
+                case 'p', 'r', 'b' ->
+                    component = transports.pop();
+                case 's', 'o', 'w' ->
+                    component = () -> String.valueOf(element);
+                default ->
+                    throw new FileFormatException("Invalid node type: " + element);
+            }
+
+            gameGrid.setCoordinate(coordinate, component);
         }
     }
 
