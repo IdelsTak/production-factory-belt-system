@@ -336,69 +336,7 @@ public class GameLoader {
                         }
                     }
 
-                    List<Integer> linkingData = new ArrayList<>();
-                    String pattern = "\\d+";
-                    Pattern regex = Pattern.compile(pattern);
-                    Matcher matcher = regex.matcher(line);
-
-                    while (matcher.find()) {
-                        String numStr = matcher.group();
-                        int num = Integer.parseInt(numStr);
-                        linkingData.add(num);
-                    }
-
-                    List<Transport> connectedTransports = transports
-                            .stream()
-                            .filter(t -> linkingData.contains(t.getId()))
-                            .toList();
-
-                    Transport firstTransport = connectedTransports
-                            .stream()
-                            .filter(t -> t.getId() == linkingData.get(0))
-                            .findFirst()
-                            .orElseThrow();
-                    Transport secondTransport = connectedTransports
-                            .stream()
-                            .filter(t -> t.getId() == linkingData.get(1))
-                            .findFirst()
-                            .orElseThrow();
-
-                    System.out.println("linking data: " + linkingData);
-
-                    if (connectedTransports.size() == 2) {
-                        if (firstTransport instanceof Producer producer) {
-                            producer.setOutput(secondTransport.getPath());
-                            secondTransport.setInput(producer.getPath());
-                        } else if (firstTransport instanceof Receiver receiver) {
-                            receiver.setInput(secondTransport.getPath());
-                            secondTransport.setOutput(receiver.getPath());
-                        } else {
-                            if (secondTransport instanceof Producer producer) {
-                                firstTransport.setInput(producer.getPath());
-                                producer.setOutput(firstTransport.getPath());
-                            } else {
-                                firstTransport.setOutput(secondTransport.getPath());
-                                secondTransport.setInput(firstTransport.getPath());
-                            }
-                        }
-                    } else if (connectedTransports.size() == 3) {
-                        Transport thirdTransport = connectedTransports
-                                .stream()
-                                .filter(t -> t.getId() == linkingData.get(2))
-                                .findFirst()
-                                .orElseThrow();
-
-                        if (firstTransport instanceof Belt belt) {
-                            belt.setInput(secondTransport.getPath());
-                            secondTransport.setOutput(belt.getPath());
-                            belt.setOutput(thirdTransport.getPath());
-                        }
-
-                        if (thirdTransport instanceof Receiver receiver) {
-                            receiver.setInput(firstTransport.getPath());
-                        }
-                    }
-
+                    parsePathsData(line, transports);
                 }
 
             }
@@ -512,7 +450,6 @@ public class GameLoader {
 //
 //        return coordinate;
 //    }
-
     /**
      * Retrieves the orientation based on the given row index, column index, and
      * hexagon grid.
@@ -549,5 +486,130 @@ public class GameLoader {
 //            return null;
 //        }
 //    }
+    private static void parsePathsData(String line,
+            List<Transport> transports) {
+
+        //15-10,17
+        Transport transport;
+        String[] parts = line.split("-");
+        int id = Integer.parseInt(parts[0]);
+
+        if (line.contains(",")) {
+            // Belt node
+            String[] connections = parts[1].split(",");
+            int previousId = connections[0].isEmpty() ? -1
+                    : Integer.parseInt(connections[0]);
+            int nextId = (connections.length < 2 || connections[1].isEmpty())
+                    ? -1
+                    : Integer.parseInt(connections[1]);
+
+            transport = findTransport(transports, id);
+            if (previousId != -1) {
+                Transport prevTransport = findTransport(transports, previousId);
+                transport.setInput(prevTransport.getPath());
+                if (!(prevTransport instanceof Receiver)) {
+                    prevTransport.setOutput(transport.getPath());
+                }
+            }
+            if (nextId != -1) {
+                Transport nextTransport = findTransport(transports, nextId);
+                transport.setOutput(nextTransport.getPath());
+                if (!(nextTransport instanceof Producer)) {
+                    nextTransport.setInput(transport.getPath());
+                }
+            }
+        } else {
+            // Producer or Receiver node
+            int connectedId = -1;
+            try {
+                connectedId = Integer.parseInt(parts[1]);
+            } catch (NumberFormatException numberFormatException) {
+            }
+
+            if (connectedId != -1) {
+                transport = findTransport(transports, id);
+                Transport connectedTransport = findTransport(transports, connectedId);
+
+                if (transport instanceof Producer producer) {
+                    producer.setOutput(connectedTransport.getPath());
+                    if (!(connectedTransport instanceof Producer)) {
+                        connectedTransport.setInput(producer.getPath());
+                    }
+                } else {
+                    transport.setInput(connectedTransport.getPath());
+                    if (!(connectedTransport instanceof Receiver)) {
+                        connectedTransport.setOutput(transport.getPath());
+                    }
+                }
+            }
+        }
+
+//        List<Integer> linkingData = new ArrayList<>();
+//        String pattern = "\\d+";
+//        Pattern regex = Pattern.compile(pattern);
+//        Matcher matcher = regex.matcher(line);
+//
+//        while (matcher.find()) {
+//            String numStr = matcher.group();
+//            int num = Integer.parseInt(numStr);
+//            linkingData.add(num);
+//        }
+//
+//        List<Transport> connectedTransports = transports
+//                .stream()
+//                .filter(t -> linkingData.contains(t.getId()))
+//                .toList();
+//
+//        Transport firstTransport = connectedTransports
+//                .stream()
+//                .filter(t -> t.getId() == linkingData.get(0))
+//                .findFirst()
+//                .orElseThrow();
+//        Transport secondTransport = connectedTransports
+//                .stream()
+//                .filter(t -> t.getId() == linkingData.get(1))
+//                .findFirst()
+//                .orElseThrow();
+//
+//        System.out.println("linking data: " + linkingData);
+//
+//        if (connectedTransports.size() == 2) {
+//            if (firstTransport instanceof Producer producer) {
+//                producer.setOutput(secondTransport.getPath());
+//                secondTransport.setInput(producer.getPath());
+//            } else if (firstTransport instanceof Receiver receiver) {
+//                receiver.setInput(secondTransport.getPath());
+//                secondTransport.setOutput(receiver.getPath());
+//            } else {
+//                if (secondTransport instanceof Producer producer) {
+//                    firstTransport.setInput(producer.getPath());
+//                    producer.setOutput(firstTransport.getPath());
+//                } else {
+//                    firstTransport.setOutput(secondTransport.getPath());
+//                    secondTransport.setInput(firstTransport.getPath());
+//                }
+//            }
+//        } else if (connectedTransports.size() == 3) {
+//            Transport thirdTransport = connectedTransports
+//                    .stream()
+//                    .filter(t -> t.getId() == linkingData.get(2))
+//                    .findFirst()
+//                    .orElseThrow();
+//
+//            if (firstTransport instanceof Belt belt) {
+//                belt.setInput(secondTransport.getPath());
+//                secondTransport.setOutput(belt.getPath());
+//                belt.setOutput(thirdTransport.getPath());
+//            }
+//
+//            if (thirdTransport instanceof Receiver receiver) {
+//                receiver.setInput(firstTransport.getPath());
+//            }
+//        }
+    }
+
+    private static Transport findTransport(List<Transport> transports, int id) {
+        return transports.stream().filter(t -> t.getId() == id).findFirst().orElseThrow();
+    }
 
 }
