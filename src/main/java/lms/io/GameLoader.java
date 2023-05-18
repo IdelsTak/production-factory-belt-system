@@ -2,8 +2,6 @@ package lms.io;
 
 import java.io.*;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lms.exceptions.FileFormatException;
 import lms.grid.*;
@@ -256,7 +254,6 @@ public class GameLoader {
 
             while ((line = in.readLine()) != null) {
                 lineCount++;
-                System.out.printf("line: %s; #: %d%n", line, lineCount);
 
                 if (lineCount == 1) {
                     range = Integer.parseInt(line);
@@ -266,11 +263,9 @@ public class GameLoader {
 
                 if (line.contains("_____")) {
                     sectionCount++;
-                    System.out.printf("end of section: %d%n", sectionCount);
                     continue;
                 }
 
-                // End of section 1 - now reading section 2
                 if (sectionCount == 1) {
                     if (numOfProducers == -1 && numOfReceivers == -1) {
                         numOfProducers = Integer.parseInt(line);
@@ -344,13 +339,17 @@ public class GameLoader {
             System.out.println("Finished parsing sections");
 
             if (grid != null && gameGrid != null) {
-
-                LinkedList<Coordinate> keys = new LinkedList<>(gameGrid.getGrid().keySet().stream().filter(c -> !c.equals(new Coordinate()))
-                        .sorted(Comparator.comparingInt(Coordinate::getCordR).thenComparingInt(Coordinate::getCordQ))
-                        .toList());
-
-                System.out.println("keys:\n" + keys.stream().map(c -> c.toString()).collect(Collectors.joining(System.lineSeparator())));
-
+                Comparator<Coordinate> comparator = Comparator
+                        .comparingInt(Coordinate::getCordR)
+                        .thenComparingInt(Coordinate::getCordQ);
+                List<Coordinate> sortedCoordinates = gameGrid
+                        .getGrid()
+                        .keySet()
+                        .stream()
+                        .filter(c -> !c.equals(new Coordinate()))
+                        .sorted(comparator)
+                        .toList();
+                LinkedList<Coordinate> keys = new LinkedList<>(sortedCoordinates);
                 LinkedList<Character> flattenedGrid = new LinkedList<>();
 
                 for (char[] row : grid) {
@@ -359,12 +358,7 @@ public class GameLoader {
                     }
                 }
 
-                System.out.println("flattenedGrid: " + flattenedGrid);
-
                 int middleIndex = flattenedGrid.size() / 2;
-                Character middleElement = flattenedGrid.get(middleIndex);
-
-                System.out.printf("middle element: %s; index: %d%n", middleElement, middleIndex);
 
                 for (int i = 0; i < flattenedGrid.size(); i++) {
                     Character element = flattenedGrid.get(i);
@@ -389,113 +383,23 @@ public class GameLoader {
                             throw new FileFormatException("Invalid node type: " + element);
                     }
 
-                    System.out.printf("should set \'%s\' at %s%n", component.getEncoding(), coordinate);
-
                     gameGrid.setCoordinate(coordinate, component);
                 }
-//
-//                for (int row = 0; row < grid.length; row++) {
-//                    for (int column = 0; column < grid[row].length; column++) {
-//                        char nodeType = grid[row][column];
-//                        Coordinate coordinate = getCoordinate(row, column, grid);
-//                        //Coordinate coordinate = new Coordinate();
-//
-//                        switch (nodeType) {
-//                            case 'p', 'r', 'b' ->
-//                                gameGrid.setCoordinate(coordinate, transports.pop());
-//                            case 's', 'o', 'w' ->
-//                                gameGrid.setCoordinate(coordinate, () -> String.valueOf(nodeType));
-//                            default ->
-//                                throw new FileFormatException("Invalid node type: " + nodeType);
-//                        }
-//                    }
-//                }
-
             }
+
             return gameGrid;
         }
     }
 
-    /**
-     * Retrieves the coordinate based on the given row, column, and grid.
-     *
-     * @param row The row index in the grid.
-     * @param column The column index in the grid.
-     * @param grid The 2D grid containing the nodes.
-     * @return The coordinate corresponding to the given row, column, and grid.
-     */
-//    private static Coordinate getCoordinate(int row, int column, char[][] grid) {
-//        Coordinate origin = new Coordinate();
-//        Coordinate coordinate = null;
-//        Orientation orientation = getOrientation(row, column, grid);
-//
-//        if (orientation != null) {
-//            switch (orientation) {
-//                case TOP_LEFT ->
-//                    coordinate = origin.getTopLeft();
-//                case TOP_RIGHT ->
-//                    coordinate = origin.getTopRight();
-//                case LEFT ->
-//                    coordinate = origin.getLeft();
-//                case RIGHT ->
-//                    coordinate = origin.getRight();
-//                case BOTTOM_LEFT ->
-//                    coordinate = origin.getBottomLeft();
-//                case BOTTOM_RIGHT ->
-//                    coordinate = origin.getBottomRight();
-//            }
-//        } else {
-//            coordinate = origin;
-//        }
-//
-//        return coordinate;
-//    }
-    /**
-     * Retrieves the orientation based on the given row index, column index, and
-     * hexagon grid.
-     *
-     * @param row The row index in the hexagon grid.
-     * @param column The column index in the hexagon grid.
-     * @param grid The 2D array representing the hexagon grid.
-     * @return The orientation of the element at the specified row and column
-     * indexes.
-     */
-//    private static Orientation getOrientation(int row, int column, char[][] grid) {
-//        int middleRow = grid.length / 2;
-//        int middleColumn = grid[middleRow].length / 2;
-//
-//        int rowDiff = row - middleRow;
-//        int columnDiff = column - middleColumn;
-//
-//        if (rowDiff == 0 && columnDiff == 0) {
-//            // Element is at the center, no direction
-//            return null;
-//        } else if (rowDiff < 0 && columnDiff >= 0) {
-//            return Orientation.TOP_RIGHT;
-//        } else if (rowDiff < 0 && columnDiff < 0) {
-//            return Orientation.TOP_LEFT;
-//        } else if (rowDiff == 0 && columnDiff < 0) {
-//            return Orientation.LEFT;
-//        } else if (rowDiff == 0 && columnDiff > 0) {
-//            return Orientation.RIGHT;
-//        } else if (rowDiff > 0 && columnDiff >= 0) {
-//            return Orientation.BOTTOM_RIGHT;
-//        } else if (rowDiff > 0 && columnDiff < 0) {
-//            return Orientation.BOTTOM_LEFT;
-//        } else {
-//            return null;
-//        }
-//    }
     private static void parsePathsData(String line,
-            List<Transport> transports) {
+            List<Transport> transports) throws FileFormatException {
 
-        //15-10,17
         Transport transport;
         String[] parts = line.split("-");
         int id = Integer.parseInt(parts[0]);
 
         if (line.contains(",")) {
-            // Belt node
+            // Belt
             String[] connections = parts[1].split(",");
             int previousId = connections[0].isEmpty() ? -1
                     : Integer.parseInt(connections[0]);
@@ -519,7 +423,7 @@ public class GameLoader {
                 }
             }
         } else {
-            // Producer or Receiver node
+            // Producer or Receiver
             int connectedId = -1;
             try {
                 connectedId = Integer.parseInt(parts[1]);
@@ -543,73 +447,15 @@ public class GameLoader {
                 }
             }
         }
-
-//        List<Integer> linkingData = new ArrayList<>();
-//        String pattern = "\\d+";
-//        Pattern regex = Pattern.compile(pattern);
-//        Matcher matcher = regex.matcher(line);
-//
-//        while (matcher.find()) {
-//            String numStr = matcher.group();
-//            int num = Integer.parseInt(numStr);
-//            linkingData.add(num);
-//        }
-//
-//        List<Transport> connectedTransports = transports
-//                .stream()
-//                .filter(t -> linkingData.contains(t.getId()))
-//                .toList();
-//
-//        Transport firstTransport = connectedTransports
-//                .stream()
-//                .filter(t -> t.getId() == linkingData.get(0))
-//                .findFirst()
-//                .orElseThrow();
-//        Transport secondTransport = connectedTransports
-//                .stream()
-//                .filter(t -> t.getId() == linkingData.get(1))
-//                .findFirst()
-//                .orElseThrow();
-//
-//        System.out.println("linking data: " + linkingData);
-//
-//        if (connectedTransports.size() == 2) {
-//            if (firstTransport instanceof Producer producer) {
-//                producer.setOutput(secondTransport.getPath());
-//                secondTransport.setInput(producer.getPath());
-//            } else if (firstTransport instanceof Receiver receiver) {
-//                receiver.setInput(secondTransport.getPath());
-//                secondTransport.setOutput(receiver.getPath());
-//            } else {
-//                if (secondTransport instanceof Producer producer) {
-//                    firstTransport.setInput(producer.getPath());
-//                    producer.setOutput(firstTransport.getPath());
-//                } else {
-//                    firstTransport.setOutput(secondTransport.getPath());
-//                    secondTransport.setInput(firstTransport.getPath());
-//                }
-//            }
-//        } else if (connectedTransports.size() == 3) {
-//            Transport thirdTransport = connectedTransports
-//                    .stream()
-//                    .filter(t -> t.getId() == linkingData.get(2))
-//                    .findFirst()
-//                    .orElseThrow();
-//
-//            if (firstTransport instanceof Belt belt) {
-//                belt.setInput(secondTransport.getPath());
-//                secondTransport.setOutput(belt.getPath());
-//                belt.setOutput(thirdTransport.getPath());
-//            }
-//
-//            if (thirdTransport instanceof Receiver receiver) {
-//                receiver.setInput(firstTransport.getPath());
-//            }
-//        }
     }
 
-    private static Transport findTransport(List<Transport> transports, int id) {
-        return transports.stream().filter(t -> t.getId() == id).findFirst().orElseThrow();
+    private static Transport findTransport(List<Transport> transports, int id) throws
+            FileFormatException {
+        return transports
+                .stream()
+                .filter(transport -> transport.getId() == id)
+                .findFirst()
+                .orElseThrow(FileFormatException::new);
     }
 
 }
