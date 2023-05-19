@@ -237,7 +237,7 @@ public class GameLoader {
         if (reader == null) {
             throw new NullPointerException();
         }
-        
+
         try (BufferedReader in = new BufferedReader(reader)) {
             int range = -1;
             String line;
@@ -262,7 +262,7 @@ public class GameLoader {
                     continue;
                 }
 
-                if (!line.contains("_____")) {
+                if (line.contains("_") && countOccurrences(line, '_') != 5) {
                     throw new FileFormatException("unexpected number of underscore lines");
                 }
 
@@ -425,7 +425,7 @@ public class GameLoader {
 
             gameGrid.setCoordinate(coordinate, component);
         }
-        
+
         if (!transports.isEmpty()) {
             String message = "invalid number of characters in the hex grid";
             throw new FileFormatException(message);
@@ -520,6 +520,25 @@ public class GameLoader {
                 .filter(transport -> transport.getId() == id)
                 .findFirst()
                 .orElseThrow(FileFormatException::new);
+    }
+
+    /**
+     * Counts the number of occurrences of a specified character in a given
+     * string.
+     *
+     * @param text The input string in which to count the occurrences.
+     * @param character The character to count the occurrences of.
+     * @return The number of occurrences of the specified character in the
+     * string.
+     */
+    private static int countOccurrences(String text, char character) {
+        int count = 0;
+        for (int i = 0; i < text.length(); i++) {
+            if (text.charAt(i) == character) {
+                count++;
+            }
+        }
+        return count;
     }
 
 }
