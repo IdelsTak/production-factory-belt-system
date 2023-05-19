@@ -234,6 +234,10 @@ public class GameLoader {
      */
     public static GameGrid load(Reader reader) throws IOException,
             FileFormatException {
+        if (reader == null) {
+            throw new NullPointerException();
+        }
+        
         try (BufferedReader in = new BufferedReader(reader)) {
             int range = -1;
             String line;
@@ -256,6 +260,10 @@ public class GameLoader {
                 if (lineCount == 1) {
                     range = Integer.parseInt(line);
                     continue;
+                }
+
+                if (!line.contains("_____")) {
+                    throw new FileFormatException("unexpected number of underscore lines");
                 }
 
                 if (line.contains("_____")) {
@@ -416,6 +424,11 @@ public class GameLoader {
             }
 
             gameGrid.setCoordinate(coordinate, component);
+        }
+        
+        if (!transports.isEmpty()) {
+            String message = "invalid number of characters in the hex grid";
+            throw new FileFormatException(message);
         }
     }
 
