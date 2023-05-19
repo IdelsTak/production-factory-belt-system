@@ -398,6 +398,10 @@ public class GameLoader {
             }
         }
 
+        if (flattenedGrid.size() != (keys.size() + 1)) {
+            throw new FileFormatException("no-hex grid");
+        }
+
         int middleIndex = flattenedGrid.size() / 2;
 
         for (int i = 0; i < flattenedGrid.size(); i++) {
