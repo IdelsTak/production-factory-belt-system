@@ -309,6 +309,8 @@ public class GameLoader {
             }
 
             return gameGrid;
+        } catch (Exception ex) {
+            throw new FileFormatException(ex);
         }
     }
 
@@ -429,58 +431,63 @@ public class GameLoader {
     private static void parsePathsData(String line,
             List<Transport> transports) throws FileFormatException {
 
-        Transport transport;
-        String[] parts = line.split("-");
-        int id = Integer.parseInt(parts[0]);
+        try {
+            Transport transport;
+            String[] parts = line.split("-");
+            int id = Integer.parseInt(parts[0]);
 
-        if (line.contains(",")) {
-            // Belt
-            String[] connections = parts[1].split(",");
-            int previousId = connections[0].isEmpty() ? -1
-                    : Integer.parseInt(connections[0]);
-            int nextId = (connections.length < 2 || connections[1].isEmpty())
-                    ? -1
-                    : Integer.parseInt(connections[1]);
+            if (line.contains(",")) {
+                // Belt
+                String[] connections = parts[1].split(",");
+                int previousId = connections[0].isEmpty() ? -1
+                        : Integer.parseInt(connections[0]);
+                int nextId = (connections.length < 2 || connections[1].isEmpty())
+                        ? -1
+                        : Integer.parseInt(connections[1]);
 
-            transport = findTransport(transports, id);
-            if (previousId != -1) {
-                Transport prevTransport = findTransport(transports, previousId);
-                transport.setInput(prevTransport.getPath());
-                if (!(prevTransport instanceof Receiver)) {
-                    prevTransport.setOutput(transport.getPath());
-                }
-            }
-            if (nextId != -1) {
-                Transport nextTransport = findTransport(transports, nextId);
-                transport.setOutput(nextTransport.getPath());
-                if (!(nextTransport instanceof Producer)) {
-                    nextTransport.setInput(transport.getPath());
-                }
-            }
-        } else {
-            // Producer or Receiver
-            int connectedId = -1;
-            try {
-                connectedId = Integer.parseInt(parts[1]);
-            } catch (NumberFormatException numberFormatException) {
-            }
-
-            if (connectedId != -1) {
                 transport = findTransport(transports, id);
-                Transport connectedTransport = findTransport(transports, connectedId);
-
-                if (transport instanceof Producer producer) {
-                    producer.setOutput(connectedTransport.getPath());
-                    if (!(connectedTransport instanceof Producer)) {
-                        connectedTransport.setInput(producer.getPath());
+                if (previousId != -1) {
+                    Transport prevTransport = findTransport(transports, previousId);
+                    if (!(transport instanceof Producer)) {
+                        transport.setInput(prevTransport.getPath());
                     }
-                } else {
-                    transport.setInput(connectedTransport.getPath());
-                    if (!(connectedTransport instanceof Receiver)) {
-                        connectedTransport.setOutput(transport.getPath());
+                    if (!(prevTransport instanceof Receiver)) {
+                        prevTransport.setOutput(transport.getPath());
+                    }
+                }
+                if (nextId != -1) {
+                    Transport nextTransport = findTransport(transports, nextId);
+                    if (!(transport instanceof Receiver)) {
+                        transport.setOutput(nextTransport.getPath());
+                    }
+                    if (!(nextTransport instanceof Producer)) {
+                        nextTransport.setInput(transport.getPath());
+                    }
+                }
+            } else {
+                // Producer or Receiver
+                int connectedId = -1;
+                connectedId = Integer.parseInt(parts[1]);
+
+                if (connectedId != -1) {
+                    transport = findTransport(transports, id);
+                    Transport connectedTransport = findTransport(transports, connectedId);
+
+                    if (transport instanceof Producer producer) {
+                        producer.setOutput(connectedTransport.getPath());
+                        if (!(connectedTransport instanceof Producer)) {
+                            connectedTransport.setInput(producer.getPath());
+                        }
+                    } else {
+                        transport.setInput(connectedTransport.getPath());
+                        if (!(connectedTransport instanceof Receiver)) {
+                            connectedTransport.setOutput(transport.getPath());
+                        }
                     }
                 }
             }
+        } catch (NumberFormatException | FileFormatException ex) {
+            throw new FileFormatException(ex);
         }
     }
 
