@@ -73,7 +73,6 @@ public class PathTest {
 
     @Test
     public void testToString() {
-        System.out.println(path);
         assertEquals("START -> <Producer-1> -> END", path.toString());
     }
 
