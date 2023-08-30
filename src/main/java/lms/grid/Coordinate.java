@@ -1,15 +1,17 @@
 package lms.grid;
 
-
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 /**
- * This is the Coordinate class, which is used to represent coordinates on a hexagonal grid.
- * (If you have read the GameLoader class,
- * this is not the same as the positional id which is generated when parsing nodes.)
- *
+ * This is the Coordinate class, which is used to represent coordinates on a
+ * hexagonal grid. (If you have read the GameLoader class, this is not the same
+ * as the positional id which is generated when parsing nodes.)
+ * <p>
  * This class represents a hexagon in
- * <a href="https://www.redblobgames.com/grids/hexagons/#basics">"point-top orientation"</a>:
+ * <a href="https://www.redblobgames.com/grids/hexagons/#basics">"point-top
+ * orientation"</a>:
  * <pre>{@code
  * Top Left      / \  Right Top
  * Left          | |  Right
@@ -17,13 +19,14 @@ import java.util.*;
  * }</pre>
  * <p>
  * <a href="https://www.redblobgames.com/grids/hexagons/#coordinates">
- *     There are multiple ways to mathematically represent a hexagonal grid.</a>
- *
- * Because programming with classes allows you to hide abstractions from other classes
- * using private methods and variables,
- * the implementation approach "doesn't matter". </p>
- * <p>When loading a grid, you will elect a point as the origin,
- * and then use the methods provided to navigate around and generate new Coordinates.</p>
+ * There are multiple ways to mathematically represent a hexagonal grid.</a>
+ * <p>
+ * Because programming with classes allows you to hide abstractions from other
+ * classes using private methods and variables, the implementation approach
+ * "doesn't matter". </p>
+ * <p>
+ * When loading a grid, you will elect a point as the origin, and then use the
+ * methods provided to navigate around and generate new Coordinates.</p>
  *
  * @version 1.1
  * @provided
@@ -46,7 +49,8 @@ public class Coordinate {
     private final int cordS;
 
     /**
-     * A Map that tracks how to calculate each of the cardinal directions of the coordinate system.
+     * A Map that tracks how to calculate each of the cardinal directions of the
+     * coordinate system.
      */
     private static final Map<Orientation, Coordinate> directions = Map.ofEntries(
             Map.entry(Orientation.TOP_LEFT, new Coordinate(0, -1, +1)),
@@ -58,17 +62,18 @@ public class Coordinate {
     );
 
     /**
-     * This should be the origin Coordinate,
-     * A special coordinate that must exist in every game map.
-     * Only Coordinates that have a direct connection (that is, not isolated)
-     * will be drawn onto the game map.
+     * This should be the origin Coordinate, A special coordinate that must
+     * exist in every game map. Only Coordinates that have a direct connection
+     * (that is, not isolated) will be drawn onto the game map.
      */
     public Coordinate() {
         this(0, 0);
     }
 
-    /***
+    /**
+     * *
      * Creates a Coordinate with three components.
+     *
      * @param x first arg
      * @param y second arg
      * @param z third arg
@@ -79,15 +84,17 @@ public class Coordinate {
         this.cordS = z;
     }
 
-    /***
-     * Creates a Coordinate with two components, calcuating the third coordinate.
+    /**
+     * *
+     * Creates a Coordinate with two components, calcuating the third
+     * coordinate.
+     *
      * @param x first arg
      * @param y second arg, z is defined as -x - y
      */
     public Coordinate(int x, int y) {
         this(x, y, -x - y);
     }
-
 
     /**
      * Returns the hash code for this Coordinate object.
@@ -117,79 +124,87 @@ public class Coordinate {
         return this.cordQ == that.cordQ && this.cordR == that.cordR && this.cordS == that.cordS;
     }
 
+    public int getCordQ() {
+        return cordQ;
+    }
+
+    public int getCordR() {
+        return cordR;
+    }
+
     /**
-     * Returns the coordinate that is one step to the left of
-     * the current coordinate in the given directions.
+     * Returns the coordinate that is one step to the left of the current
+     * coordinate in the given directions.
      *
-     * @return The coordinate that is one step
-     * to the left of the current coordinate.
+     * @return The coordinate that is one step to the left of the current
+     * coordinate.
      */
     public Coordinate getLeft() {
         return add(directions.get(Orientation.LEFT));
     }
 
     /**
-     * Returns the coordinate that is one step to the right of
-     * the current coordinate in the given directions.
+     * Returns the coordinate that is one step to the right of the current
+     * coordinate in the given directions.
      *
-     * @return The coordinate that is one step
-     * to the right of the current coordinate.
+     * @return The coordinate that is one step to the right of the current
+     * coordinate.
      */
     public Coordinate getRight() {
         return add(directions.get(Orientation.RIGHT));
     }
 
     /**
-     * Returns the coordinate that is one step to the top-left of
-     * the current coordinate in the given directions.
+     * Returns the coordinate that is one step to the top-left of the current
+     * coordinate in the given directions.
      *
-     * @return The coordinate that is one step
-     * to the top-left of the current coordinate.
+     * @return The coordinate that is one step to the top-left of the current
+     * coordinate.
      */
     public Coordinate getTopLeft() {
         return add(directions.get(Orientation.TOP_LEFT));
     }
 
     /**
-     * Returns the coordinate that is one step to the top-right of
-     * the current coordinate in the given directions.
+     * Returns the coordinate that is one step to the top-right of the current
+     * coordinate in the given directions.
      *
-     * @return The coordinate that is one step
-     * to the top-right of the current coordinate.
+     * @return The coordinate that is one step to the top-right of the current
+     * coordinate.
      */
     public Coordinate getTopRight() {
         return add(directions.get(Orientation.TOP_RIGHT));
     }
 
     /**
-     * Returns the coordinate that is one step to the bottom-left of
-     * the current coordinate in the given directions.
+     * Returns the coordinate that is one step to the bottom-left of the current
+     * coordinate in the given directions.
      *
-     * @return The coordinate that is one step
-     * to the bottom-left of the current coordinate.
+     * @return The coordinate that is one step to the bottom-left of the current
+     * coordinate.
      */
     public Coordinate getBottomLeft() {
         return add(directions.get(Orientation.BOTTOM_LEFT));
     }
 
     /**
-     * Returns the coordinate that is one step to the bottom-right of
-     * the current coordinate in the given directions.
+     * Returns the coordinate that is one step to the bottom-right of the
+     * current coordinate in the given directions.
      *
-     * @return The coordinate that is one step
-     * to the bottom-right of the current coordinate.
+     * @return The coordinate that is one step to the bottom-right of the
+     * current coordinate.
      */
     public Coordinate getBottomRight() {
         return add(directions.get(Orientation.BOTTOM_RIGHT));
     }
 
     /**
-     * Returns a new Coordinate object that is the result of
-     * adding the given vector to this Coordinate object.
+     * Returns a new Coordinate object that is the result of adding the given
+     * vector to this Coordinate object.
      *
      * @param vector the vector to add to this Coordinate object.
-     * @return a new Coordinate object that is the result of
-     * adding the given vector to this Coordinate object.
+     * @return a new Coordinate object that is the result of adding the given
+     * vector to this Coordinate object.
      */
     private Coordinate add(Coordinate vector) {
         return new Coordinate(cordQ + vector.cordQ, cordR + vector.cordR, cordS + vector.cordS);
@@ -197,26 +212,24 @@ public class Coordinate {
     }
 
     /**
-     * Returns a new Coordinate object that is the result of
-     * subtracting the given vector from this Coordinate object.
+     * Returns a new Coordinate object that is the result of subtracting the
+     * given vector from this Coordinate object.
      *
      * @param vector the vector to subtract from this Coordinate object.
-     * @return a new Coordinate object that is the result of
-     * subtracting the given vector from this Coordinate object.
+     * @return a new Coordinate object that is the result of subtracting the
+     * given vector from this Coordinate object.
      */
     private Coordinate subtract(Coordinate vector) {
         return new Coordinate(cordQ - vector.cordQ, cordR - vector.cordR, cordS - vector.cordS);
     }
 
-
     /**
-     * Returns true if the given Coordinate object is a
-     * neighbour of this Coordinate object, false otherwise.
+     * Returns true if the given Coordinate object is a neighbour of this
+     * Coordinate object, false otherwise.
      *
-     * @param coordinate the Coordinate object to check for
-     *                   neighbourliness.
-     * @return true if the given Coordinate object is a
-     * neighbour of this Coordinate object, false otherwise.
+     * @param coordinate the Coordinate object to check for neighbourliness.
+     * @return true if the given Coordinate object is a neighbour of this
+     * Coordinate object, false otherwise.
      */
     public boolean isNeighbour(Coordinate coordinate) {
         Coordinate vector = subtract(coordinate);
@@ -224,19 +237,20 @@ public class Coordinate {
     }
 
     /**
-     * Gets the direction required to travel to get from this coordinate to the reference coordinate
+     * Gets the direction required to travel to get from this coordinate to the
+     * reference coordinate
      *
      * @param coordinate reference to be examined
      * @return Orientation direction of travel
-     * @requires isNeighbour(coordinate) == true || you can travel from this coordinate to the
-     * other in a straight line
+     * @requires isNeighbour(coordinate) == true || you can travel from this
+     * coordinate to the other in a straight line
      * @ensures Orientation returns is correct as a direct relation
      */
     public Orientation getDirection(Coordinate coordinate) {
 
         /*
-         * vector is the direction you would need to travel to get
-         * from this coordinate to the next
+         * vector is the direction you would need to travel to get from this
+         * coordinate to the next
          */
         Coordinate vector = normalise(coordinate.subtract(this));
 
@@ -263,8 +277,5 @@ public class Coordinate {
                 vector.cordS / Math.max(Math.abs(vector.cordS), 1)
         );
     }
-
-
-
 
 }
